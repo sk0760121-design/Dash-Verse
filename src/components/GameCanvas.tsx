@@ -155,7 +155,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     lastObstacleType: '',
     
     // Day cycle
-    dayProgress: 0, // 0 to 1 scaling, day/night cycles every 500 score points
+    dayProgress: 0, // 0 to 1 scaling, day/night cycles every 3000 score points
     
     // Render support
     screenShake: 0,
@@ -616,9 +616,9 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       engine.scoreAccumulator -= wholePoints;
     }
     
-    // Day cycle progress mapping: full loop every 500 score points
-    // Let's loop between 0 and 1 represent the full 500 score stretch
-    engine.dayProgress = (engine.score % 500) / 500;
+    // Day cycle progress mapping: full loop every 3000 score points
+    // Let's loop between 0 and 1 represent the full 3000 score stretch
+    engine.dayProgress = (engine.score % 3000) / 3000;
 
     // Difficulty score achievements tracking
     if (engine.score >= 100) triggerAchievement('score-100');

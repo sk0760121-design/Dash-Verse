@@ -1,0 +1,6 @@
+{
+  "name": "Endless Runner",
+  "description": "An action-packed HTML5 retro endless runner game with double jumping, ducking, day/night cycles, dynamic obstacles, a shop, achievements, missions, and global statistics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

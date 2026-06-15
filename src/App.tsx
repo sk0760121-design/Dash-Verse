@@ -16,38 +16,9 @@ import { DailyLoginBonus } from './components/DailyLoginBonus';
 import { Leaderboard } from './components/Leaderboard';
 import { sound } from './utils/sound';
 import { Sparkles, X, Heart, Award } from 'lucide-react';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 
-// Static Configuration Presets for Shop Unlocks
-const INITIAL_CHARACTERS: Character[] = [
-  { id: 'classic_dino', name: '🦖 Classic Rex', cost: 0, unlocked: true, description: 'Default green dinosaur. Grounded running (No Double Jumps Allowed!)', color: '#10b981', accentColor: '#34d399', runnerType: 'dino' },
-  { id: 'cyber_run', name: '🤖 Cyber Runner', cost: 50, unlocked: false, description: 'Metal plates and booster jet. Double Jump Capability enabled.', color: '#06b6d4', accentColor: '#22d3ee', runnerType: 'robot' },
-  { id: 'pixie_fox', name: '🦊 Pixie Ninja', cost: 120, unlocked: false, description: 'Swift crimson woodland runner. Double Jump Capability enabled.', color: '#ef4444', accentColor: '#f97316', runnerType: 'fox' },
-  { id: 'neon_sphere', name: '🔮 Neon core', cost: 250, unlocked: false, description: 'Futuristic pulsing anti-gravity orb. Double Jump Capability enabled.', color: '#a855f7', accentColor: '#f43f5e', runnerType: 'sphere' },
-];
-
-const INITIAL_TRAILS: Trail[] = [
-  { id: 'trail_none', name: 'None', cost: 0, unlocked: true, type: 'none', color: '#ffffff' },
-  { id: 'trail_fire', name: '🔥 Fire Blast', cost: 40, unlocked: false, type: 'fire', color: '#f97316' },
-  { id: 'trail_rainbow', name: '🌈 Rainbow Pixels', cost: 80, unlocked: false, type: 'rainbow', color: '#f43f5e' },
-  { id: 'trail_electric', name: '⚡ Electric Zap', cost: 150, unlocked: false, type: 'electric', color: '#22d3ee' },
-  { id: 'trail_shadow', name: '👤 Shadow Eclipse', cost: 200, unlocked: false, type: 'shadow', color: 'rgba(0,0,0,0.15)' },
-];
-
-const INITIAL_THEMES: GameTheme[] = [
-  { id: 'theme_classic', name: '🌅 Classic Horizon', cost: 0, unlocked: true, skyColor: '#bae6fd', skyNightColor: '#020617', groundColor: '#4b5563', mountainColor: '#334155', treeColor: '#1e293b' },
-  { id: 'theme_cyber', name: '🎆 Cyber Sunset', cost: 100, unlocked: false, skyColor: '#4c1d95', skyNightColor: '#120526', groundColor: '#1e1b4b', mountainColor: '#581c87', treeColor: '#3b0764' },
-  { id: 'theme_volcanic', name: '🌋 Ash Rift', cost: 150, unlocked: false, skyColor: '#7c2d12', skyNightColor: '#110402', groundColor: '#1c1917', mountainColor: '#451a03', treeColor: '#292524' },
-  { id: 'theme_valley', name: '🌲 Emerald Valley', cost: 180, unlocked: false, skyColor: '#fef08a', skyNightColor: '#022c22', groundColor: '#14532d', mountainColor: '#15803d', treeColor: '#166534' },
-];
-
-const INITIAL_MISSIONS: Mission[] = [
-  { id: 'mission-jumps', title: 'Sky Hopper', description: 'Jump 20 times across runs', target: 20, current: 0, reward: 15, completed: false, claimed: false },
-  { id: 'mission-coins', title: 'Golden Hoard', description: 'Amass 30 golden coins in bank savings', target: 30, current: 0, reward: 25, completed: false, claimed: false },
-  { id: 'mission-score-500', title: 'Horizon Novice', description: 'Gain 500 score points distance', target: 500, current: 0, reward: 30, completed: false, claimed: false },
-  { id: 'mission-score-1000', title: 'Horizon Seeker', description: 'Gain 1000 score points distance', target: 1000, current: 0, reward: 50, completed: false, claimed: false },
-  { id: 'mission-obstacles', title: 'Flawless Strider', description: 'Safely clear 100 total obstacles', target: 100, current: 0, reward: 40, completed: false, claimed: false },
-];
+import { INITIAL_CHARACTERS, INITIAL_TRAILS, INITIAL_THEMES, INITIAL_MISSIONS } from './data/gameContent';
 
 const INITIAL_ACHIEVEMENTS: Achievement[] = [
   { id: 'first-jump', title: 'Skyward Bound', description: 'Perform your first jump into the horizon.', icon: 'zap', unlocked: false },
@@ -127,7 +98,16 @@ export default function App() {
   const [characters, setCharacters] = useState<Character[]>(() => {
     try {
       const stored = localStorage.getItem('horizon_runner_chars');
-      return stored ? JSON.parse(stored) : INITIAL_CHARACTERS;
+      if (stored) {
+        const parsed = JSON.parse(stored) as Character[];
+        if (parsed.length < INITIAL_CHARACTERS.length) {
+          const parsedIds = new Set(parsed.map(c => c.id));
+          const newItems = INITIAL_CHARACTERS.filter(c => !parsedIds.has(c.id));
+          return [...parsed, ...newItems];
+        }
+        return parsed;
+      }
+      return INITIAL_CHARACTERS;
     } catch {
       return INITIAL_CHARACTERS;
     }
@@ -136,7 +116,16 @@ export default function App() {
   const [trails, setTrails] = useState<Trail[]>(() => {
     try {
       const stored = localStorage.getItem('horizon_runner_trails');
-      return stored ? JSON.parse(stored) : INITIAL_TRAILS;
+      if (stored) {
+        const parsed = JSON.parse(stored) as Trail[];
+        if (parsed.length < INITIAL_TRAILS.length) {
+          const parsedIds = new Set(parsed.map(t => t.id));
+          const newItems = INITIAL_TRAILS.filter(t => !parsedIds.has(t.id));
+          return [...parsed, ...newItems];
+        }
+        return parsed;
+      }
+      return INITIAL_TRAILS;
     } catch {
       return INITIAL_TRAILS;
     }
@@ -145,7 +134,16 @@ export default function App() {
   const [themes, setThemes] = useState<GameTheme[]>(() => {
     try {
       const stored = localStorage.getItem('horizon_runner_themes');
-      return stored ? JSON.parse(stored) : INITIAL_THEMES;
+      if (stored) {
+        const parsed = JSON.parse(stored) as GameTheme[];
+        if (parsed.length < INITIAL_THEMES.length) {
+          const parsedIds = new Set(parsed.map(t => t.id));
+          const newItems = INITIAL_THEMES.filter(t => !parsedIds.has(t.id));
+          return [...parsed, ...newItems];
+        }
+        return parsed;
+      }
+      return INITIAL_THEMES;
     } catch {
       return INITIAL_THEMES;
     }
@@ -154,7 +152,19 @@ export default function App() {
   const [missions, setMissions] = useState<Mission[]>(() => {
     try {
       const stored = localStorage.getItem('horizon_runner_missions');
-      return stored ? JSON.parse(stored) : INITIAL_MISSIONS;
+      if (stored) {
+        const parsed = JSON.parse(stored) as Mission[];
+        if (parsed.length < INITIAL_MISSIONS.length) {
+          // Merge missions by keeping state for identical ones and adding the new ones
+          const existingMap = new Map(parsed.map(m => [m.id, m]));
+          return INITIAL_MISSIONS.map(m => {
+            const ex = existingMap.get(m.id);
+            return ex ? { ...m, current: ex.current, completed: ex.completed, claimed: ex.claimed } : m;
+          });
+        }
+        return parsed;
+      }
+      return INITIAL_MISSIONS;
     } catch {
       return INITIAL_MISSIONS;
     }
@@ -186,8 +196,36 @@ export default function App() {
     }
   });
 
-  // Floating notifications banner system
+   // Floating notifications banner system
   const [activeNotifier, setActiveNotifier] = useState<Achievement | null>(null);
+
+  // Landscape/Portrait orientation detection
+  const [isPortrait, setIsPortrait] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      // Determine if width is less than height to prompt rotation
+      setIsPortrait(window.innerWidth < window.innerHeight);
+    };
+
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    // Attempt native layout orientation lock for landscape if supported
+    try {
+      if (screen.orientation && (screen.orientation as any).lock) {
+        (screen.orientation as any).lock('landscape').catch(() => {});
+      }
+    } catch {
+      // Ignore fallback failures safely
+    }
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
 
   // Fullscreen view mechanics
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -329,6 +367,67 @@ export default function App() {
     localStorage.setItem('horizon_runner_stats', JSON.stringify(stats));
   }, [stats]);
 
+  // Synchronize global leaderboard immediately upon hitting a high score or switching runners
+  useEffect(() => {
+    try {
+      const savedBoardStr = localStorage.getItem('horizon_runner_global_leaderboard');
+      let currentBoard: any[] = [];
+      const defaultCompetitors = [
+        { rank: 1, name: 'SudoBash', score: 9450, avatarColor: '#f43f5e', activeCharacter: 'Cyber Sphere' },
+        { rank: 2, name: 'NeonDino_60', score: 7820, avatarColor: '#00f2ff', activeCharacter: 'Emerald Dino' },
+        { rank: 3, name: 'CyberDASH', score: 6100, avatarColor: '#a855f7', activeCharacter: 'Phantom Fox' },
+        { rank: 4, name: 'MatrixSpin', score: 4950, avatarColor: '#10b981', activeCharacter: 'Chrono Dino' },
+        { rank: 5, name: 'PixelDancer', score: 3500, avatarColor: '#fbbf24', activeCharacter: 'Crimson Robot' },
+        { rank: 6, name: 'RetroRacer', score: 2280, avatarColor: '#ec4899', activeCharacter: 'Golden Robot' },
+        { rank: 7, name: 'ChronoRun', score: 1420, avatarColor: '#6366f1', activeCharacter: 'Classic Dino' },
+        { rank: 8, name: 'SphereDucker', score: 850, avatarColor: '#84cc16', activeCharacter: 'Classic Dino' },
+      ];
+
+      if (savedBoardStr) {
+        try {
+          const parsed = JSON.parse(savedBoardStr);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            currentBoard = parsed;
+          } else {
+            currentBoard = [...defaultCompetitors];
+          }
+        } catch {
+          currentBoard = [...defaultCompetitors];
+        }
+      } else {
+        currentBoard = [...defaultCompetitors];
+      }
+
+      const savedGamerTag = localStorage.getItem('horizon_runner_gamertag') || 'Guest_Runner';
+      // Filter out old user entries to avoid duplicates
+      const filteredBoard = currentBoard.filter(item => !item.isUser && item.name !== savedGamerTag);
+      
+      const activeCharObj = characters.find(c => c.id === gameState.activeCharacterId);
+      const activeCharName = activeCharObj ? activeCharObj.name : 'Your Runner';
+
+      filteredBoard.push({
+        name: savedGamerTag,
+        score: typeof stats.highScore === 'number' && !isNaN(stats.highScore) ? stats.highScore : 0,
+        avatarColor: '#f59e0b', // Amber user glow color
+        activeCharacter: activeCharName,
+        isUser: true,
+      });
+
+      // Sort descending
+      filteredBoard.sort((a, b) => b.score - a.score);
+
+      // Re-assign ranks
+      const finalBoard = filteredBoard.map((item, idx) => ({
+        ...item,
+        rank: idx + 1,
+      }));
+
+      localStorage.setItem('horizon_runner_global_leaderboard', JSON.stringify(finalBoard));
+    } catch (e) {
+      console.error('Failed to auto-sync leaderboard:', e);
+    }
+  }, [stats.highScore, gameState.activeCharacterId, characters]);
+
   useEffect(() => {
     localStorage.setItem('horizon_runner_chars', JSON.stringify(characters));
   }, [characters]);
@@ -370,11 +469,23 @@ export default function App() {
     setMissions(prev => {
       const updated = prev.map(m => {
         let current = 0;
-        if (m.id === 'mission-jumps') current = stats.totalJumps;
-        if (m.id === 'mission-coins') current = stats.coins;
-        if (m.id === 'mission-score-500') current = stats.highScore;
-        if (m.id === 'mission-score-1000') current = stats.highScore;
-        if (m.id === 'mission-obstacles') current = stats.obstaclesAvoided;
+        if (m.id.includes('jumps') || m.id === 'mission-jumps') {
+          current = stats.totalJumps;
+        } else if (m.id.includes('coin-bank') || m.id === 'mission-coins') {
+          current = stats.coins;
+        } else if (m.id.includes('lifetime-coins')) {
+          current = stats.totalCoinsCollected;
+        } else if (m.id.includes('score') || m.id.includes('highscore') || m.id === 'mission-score-500' || m.id === 'mission-score-1000') {
+          current = stats.highScore;
+        } else if (m.id.includes('obstacles') || m.id === 'mission-obstacles') {
+          current = stats.obstaclesAvoided;
+        } else if (m.id.includes('plays')) {
+          current = stats.totalPlays;
+        } else if (m.id.includes('distance')) {
+          current = stats.totalDistanceRun;
+        } else if (m.id.includes('ducks')) {
+          current = stats.totalDucks;
+        }
 
         const completed = current >= m.target;
         return {
@@ -775,6 +886,61 @@ export default function App() {
       <footer className="py-4 text-center text-xs text-slate-500 font-mono uppercase bg-slate-950/20 border-t border-slate-905">
         <span>© 2026 HORIZON RUNNER &bull; FULLY OFFLINE ACCESS</span>
       </footer>
+
+      {/* 🔄 Landscape Mode Required Immersive Overlay */}
+      <AnimatePresence>
+        {isPortrait && (
+          <motion.div
+            id="landscape-lock-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950 z-[9999] flex flex-col items-center justify-center p-6 text-center text-white"
+          >
+            <div className="absolute inset-0 atmosphere opacity-35 pointer-events-none" />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.15, duration: 0.4 }}
+              className="glass-panel p-8 rounded-3xl max-w-sm border-pink-500/30 shadow-[0_0_50px_rgba(244,63,94,0.18)] flex flex-col items-center"
+            >
+              {/* Rotating Phone Visual Animation */}
+              <div className="relative w-24 h-24 mb-6 flex items-center justify-center">
+                <motion.div
+                  animate={{ rotate: [0, -90, -90, 0, 0] }}
+                  transition={{
+                    duration: 2.6,
+                    repeat: Infinity,
+                    repeatDelay: 0.6,
+                    ease: "easeInOut"
+                  }}
+                  className="w-10 h-16 border-4 border-cyan-400 rounded-xl relative flex items-center justify-center bg-cyan-950/20 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                >
+                  <div className="absolute bottom-1 w-2 h-2 rounded-full bg-cyan-400/50" />
+                  <div className="absolute top-1 w-4 h-1 rounded-full bg-cyan-400/50" />
+                </motion.div>
+                
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 border border-dashed border-cyan-500/25 rounded-full"
+                />
+              </div>
+
+              <h2 className="text-xl font-black font-sans tracking-widest text-[#f43f5e] uppercase drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]">
+                🔄 LANDSCAPE REQUIRED
+              </h2>
+              <p className="text-sm font-bold text-slate-100 tracking-wide mt-2">
+                APNE DEVICE KO ROTATE KAREN
+              </p>
+              <p className="text-xs text-slate-450 font-mono uppercase mt-4 leading-relaxed">
+                Better gaming experience & wide visibility ke liye please phone ko rotate karke Landscape mode mein rakhein.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

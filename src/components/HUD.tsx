@@ -211,7 +211,7 @@ export const HUD: React.FC<HUDProps> = ({
           <button
             onTouchStart={onJumpStart}
             onClick={onJumpStart}
-            className="flex-1 active:scale-95 h-12 bg-slate-900/65 active:bg-cyan-500/20 backdrop-blur-xs border border-slate-800 active:border-cyan-500/50 rounded-xl select-none flex flex-col justify-center items-center font-sans font-black text-cyan-400/80 cursor-pointer transition shadow-md lg:hidden"
+            className="flex-1 active:scale-95 h-12 bg-slate-900/65 active:bg-cyan-500/20 backdrop-blur-xs border border-slate-800 active:border-cyan-500/50 rounded-xl select-none flex flex-col justify-center items-center font-sans font-black text-cyan-400/80 cursor-pointer transition shadow-md xl:hidden"
           >
             <span className="text-sm font-bold tracking-tight uppercase">JUMP</span>
             <span className="text-[8px] font-mono text-slate-500 uppercase">TAP SCREEN / SWIPE UP</span>
@@ -224,7 +224,7 @@ export const HUD: React.FC<HUDProps> = ({
             onMouseDown={() => onDuckStart(true)}
             onMouseUp={() => onDuckStart(false)}
             onMouseLeave={() => onDuckStart(false)}
-            className="flex-1 active:scale-95 h-12 bg-slate-900/65 active:bg-orange-500/20 backdrop-blur-xs border border-slate-800 active:border-orange-500/50 rounded-xl select-none flex flex-col justify-center items-center font-sans font-black text-orange-400/80 cursor-pointer transition shadow-md lg:hidden"
+            className="flex-1 active:scale-95 h-12 bg-slate-900/65 active:bg-orange-500/20 backdrop-blur-xs border border-slate-800 active:border-orange-500/50 rounded-xl select-none flex flex-col justify-center items-center font-sans font-black text-orange-400/80 cursor-pointer transition shadow-md xl:hidden"
           >
             <span className="text-sm font-bold tracking-tight uppercase">DUCK</span>
             <span className="text-[8px] font-mono text-slate-500 uppercase">HOLD / SWIPE DOWN</span>

@@ -50,19 +50,28 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ userHighScore, onClose
       let currentBoard: any[] = [];
       
       if (savedBoardStr) {
-        currentBoard = JSON.parse(savedBoardStr);
+        try {
+          const parsed = JSON.parse(savedBoardStr);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            currentBoard = parsed;
+          } else {
+            currentBoard = [...DEFAULT_GLOBAL_LEADERBOARD];
+          }
+        } catch {
+          currentBoard = [...DEFAULT_GLOBAL_LEADERBOARD];
+        }
       } else {
         currentBoard = [...DEFAULT_GLOBAL_LEADERBOARD];
       }
 
       // Check if user's score exists, or if we need to insert/update the user's rank
-      // Let's filter out any existing user record first to replace it, or if none, insert it
-      let filteredBoard = currentBoard.filter(item => !item.isUser);
+      // Let's filter out any existing user record to replace it. Also filter out duplicate name matches.
+      const filteredBoard = currentBoard.filter(item => !item.isUser && item.name !== savedGamerTag);
       
       // Inject user's live profile
       filteredBoard.push({
         name: savedGamerTag,
-        score: userHighScore,
+        score: typeof userHighScore === 'number' && !isNaN(userHighScore) ? userHighScore : 0,
         avatarColor: '#f59e0b', // Amber user glow color
         activeCharacter: localStorage.getItem('horizon_runner_active_char_name') || 'Your Runner',
         isUser: true,
@@ -164,7 +173,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ userHighScore, onClose
   // Resolve user percentile standing
   const userRankIndex = board.findIndex(item => item.isUser);
   const userRank = userRankIndex !== -1 ? userRankIndex + 1 : board.length;
-  const percentile = Math.max(2, Math.min(100, Math.round((userRank / board.length) * 100)));
+  const totalCompetitors = board.length || 1;
+  const percentile = userRank === 1 
+    ? 1 
+    : Math.max(2, Math.min(99, Math.round(((userRank - 0.5) / totalCompetitors) * 100)));
 
   return (
     <div id="leaderboard-panel-root" className="w-full max-w-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/35 rounded-3xl p-6 md:p-8 shadow-[0_0_60px_rgba(6,182,212,0.18)] relative overflow-hidden text-slate-100 mx-auto">
@@ -246,7 +258,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ userHighScore, onClose
                   <input
                     type="text"
                     value={tagNameInput}
-                    onChange={(e) => setTagNameInput(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+                    onChange={(e) => setTagNameInput(e.target.value.replace(/[^a-zA-Z0-9_ -]/g, ''))}
                     className="bg-slate-950 border border-amber-500/50 rounded px-2 py-0.5 text-xs text-white uppercase focus:outline-none focus:border-amber-400 font-mono max-w-[150px]"
                     placeholder="ENTER TAG"
                     maxLength={15}

@@ -877,16 +877,25 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     }
 
     const activeThemeId = engine.selectedTheme?.id || 'theme_classic';
-    const maxParticles = activeThemeId === 'theme_classic' ? 120 
-                        : activeThemeId === 'theme_cyber' ? 80 
-                        : activeThemeId === 'theme_volcanic' ? 110 
+    let weatherStyle = 'classic';
+    if (activeThemeId === 'theme_cyber' || activeThemeId.includes('synth') || activeThemeId.includes('noir') || activeThemeId.includes('neon')) {
+      weatherStyle = 'cyber';
+    } else if (activeThemeId === 'theme_volcanic' || activeThemeId.includes('desert') || activeThemeId.includes('magma') || activeThemeId.includes('ash')) {
+      weatherStyle = 'volcanic';
+    } else if (activeThemeId === 'theme_valley' || activeThemeId.includes('cherry') || activeThemeId.includes('sakura')) {
+      weatherStyle = 'valley';
+    }
+
+    const maxParticles = weatherStyle === 'classic' ? 120 
+                        : weatherStyle === 'cyber' ? 80 
+                        : weatherStyle === 'volcanic' ? 110 
                         : 80;
 
     // 1. Spawning controls
     if (engine.weatherParticles.length < maxParticles) {
       const spawnChance = 0.65;
       if (Math.random() < spawnChance) {
-        if (activeThemeId === 'theme_classic') {
+        if (weatherStyle === 'classic') {
           // Classic theme: Beautiful slant-dripping azure rain drops
           const onRightSide = Math.random() > 0.75;
           engine.weatherParticles.push({
@@ -900,7 +909,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
             color: 'rgba(14, 165, 233, 0.45)',
             alpha: 0.4 + Math.random() * 0.3,
           });
-        } else if (activeThemeId === 'theme_cyber') {
+        } else if (weatherStyle === 'cyber') {
           // Cyber Sunset theme: Neon digital matrix rain (cyan, magenta, purple)
           const choice = Math.random();
           const color = choice > 0.7 ? '#f43f5e' : (choice > 0.35 ? '#00f2ff' : '#a855f7');
@@ -915,7 +924,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
             color: color,
             alpha: 0.6 + Math.random() * 0.4,
           });
-        } else if (activeThemeId === 'theme_volcanic') {
+        } else if (weatherStyle === 'volcanic') {
           // Volcanic: Ash flakes combined with rising magma embers
           if (Math.random() < 0.65) {
             // Dark gray ash drifting down-left
@@ -948,7 +957,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
               maxLife: 90 + Math.floor(Math.random() * 90),
             });
           }
-        } else if (activeThemeId === 'theme_valley') {
+        } else if (weatherStyle === 'valley') {
           // Emerald Valley: Spinning cherry blossom petals and floating emerald/golden pollen
           if (Math.random() < 0.5) {
             // Pink blossom petal drifting down
@@ -1326,45 +1335,95 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       });
     }
 
-    // 2. Draw Sun or Moon based on Day Progress
+    // 2. Draw Sun or Moon based on Day Progress with Rich Glow and Rings
     const celestialRadius = 24;
     const celestialY = 70 + Math.sin(progress * Math.PI * 2 + Math.PI/2) * 50; 
     let celestialX = (progress * VIRTUAL_WIDTH * 1.5) % (VIRTUAL_WIDTH * 1.4) - 200;
 
     if (progress <= 0.5) {
-      // Draw Sun
-      ctx.shadowBlur = (settings.reduceMotion || isMobile) ? 0 : 20;
-      ctx.shadowColor = '#fef08a';
-      ctx.fillStyle = '#fbbf24';
+      // Draw Sun with Radial Heat Halo
+      ctx.save();
+      if (!settings.reduceMotion && !isMobile) {
+        ctx.shadowBlur = 40;
+        ctx.shadowColor = '#eab308';
+      }
+      
+      const sunHalo = ctx.createRadialGradient(celestialX + 150, celestialY + 15, 5, celestialX + 150, celestialY + 15, 65);
+      sunHalo.addColorStop(0, 'rgba(253, 224, 71, 0.95)');
+      sunHalo.addColorStop(0.35, 'rgba(234, 179, 8, 0.35)');
+      sunHalo.addColorStop(1, 'rgba(234, 179, 8, 0)');
+      ctx.fillStyle = sunHalo;
+      ctx.beginPath();
+      ctx.arc(celestialX + 150, celestialY + 15, 65, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sun Core
+      ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       ctx.arc(celestialX + 150, celestialY + 15, celestialRadius, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0; // reset
+      ctx.restore();
     } else {
-      // Draw Glowing Moon
-      ctx.shadowBlur = (settings.reduceMotion || isMobile) ? 0 : 15;
-      ctx.shadowColor = '#38bdf8';
-      ctx.fillStyle = '#e2e8f0';
+      // Draw Moon with Celestial Nebula Aura
+      ctx.save();
+      if (!settings.reduceMotion && !isMobile) {
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#38bdf8';
+      }
+
+      const moonHalo = ctx.createRadialGradient((celestialX - VIRTUAL_WIDTH * 0.7) + 200, celestialY + 25, 4, (celestialX - VIRTUAL_WIDTH * 0.7) + 200, celestialY + 25, 50);
+      moonHalo.addColorStop(0, 'rgba(241, 245, 249, 1)');
+      moonHalo.addColorStop(0.4, 'rgba(56, 189, 248, 0.25)');
+      moonHalo.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = moonHalo;
+      ctx.beginPath();
+      ctx.arc((celestialX - VIRTUAL_WIDTH * 0.7) + 200, celestialY + 25, 50, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Moon Primary Core
+      ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
       ctx.arc((celestialX - VIRTUAL_WIDTH * 0.7) + 200, celestialY + 25, celestialRadius * 0.9, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0; // reset
+      ctx.restore();
 
-      // Crater details
+      // Lunar crater details with shadows
       ctx.fillStyle = '#cbd5e1';
       ctx.beginPath();
-      ctx.arc((celestialX - VIRTUAL_WIDTH * 0.7) + 194, celestialY + 20, 4, 0, Math.PI * 2);
-      ctx.arc((celestialX - VIRTUAL_WIDTH * 0.7) + 206, celestialY + 30, 3, 0, Math.PI * 2);
-      ctx.arc((celestialX - VIRTUAL_WIDTH * 0.7) + 202, celestialY + 18, 2.5, 0, Math.PI * 2);
+      ctx.arc((celestialX - VIRTUAL_WIDTH * 0.7) + 194, celestialY + 20, 3.8, 0, Math.PI * 2);
+      ctx.arc((celestialX - VIRTUAL_WIDTH * 0.7) + 206, celestialY + 30, 2.8, 0, Math.PI * 2);
+      ctx.arc((celestialX - VIRTUAL_WIDTH * 0.7) + 202, celestialY + 18, 2.2, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // 3. Mountains layer (Slow scroll parallax)
-    ctx.fillStyle = mountainsBg;
-    const mountScroll = (engine.scrollX * 0.1) % 600;
+    // 3. Double Parallax Mountains Layer (Breathtaking Scenic Depth)
     
-    // Custom flat geometric parallax mountain outlines
-    const drawMountains = (offsetX: number) => {
+    // --- LAYER A: Taller Far-Hills silhouette (Very slow scroll - scroll factor 0.045) ---
+    const farMountScroll = (engine.scrollX * 0.045) % 600;
+    ctx.fillStyle = skyNightAlpha > 0.5 ? 'rgba(30, 41, 59, 0.22)' : 'rgba(255, 255, 255, 0.16)';
+    const drawFarMountains = (offsetX: number) => {
+      ctx.beginPath();
+      ctx.moveTo(-offsetX, GROUND_Y + 5);
+      ctx.lineTo(120 - offsetX, 130);
+      ctx.lineTo(250 - offsetX, 190);
+      ctx.lineTo(390 - offsetX, 100);
+      ctx.lineTo(540 - offsetX, 210);
+      ctx.lineTo(710 - offsetX, 110);
+      ctx.lineTo(870 - offsetX, 220);
+      ctx.lineTo(1100 - offsetX, GROUND_Y + 5);
+      ctx.closePath();
+      ctx.fill();
+    };
+    drawFarMountains(farMountScroll);
+    drawFarMountains(farMountScroll - 600);
+    drawFarMountains(farMountScroll + 600);
+
+    // --- LAYER B: Near Mountains with Theme-Specific Styles (Scroll Factor: 0.12) ---
+    const nearMountScroll = (engine.scrollX * 0.12) % 600;
+    ctx.fillStyle = mountainsBg;
+    
+    const drawNearMountains = (offsetX: number) => {
+      // Main near mountain body
       ctx.beginPath();
       ctx.moveTo(-offsetX, GROUND_Y + 5);
       ctx.lineTo(150 - offsetX, 190);
@@ -1376,13 +1435,101 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       ctx.lineTo(1100 - offsetX, GROUND_Y + 5);
       ctx.closePath();
       ctx.fill();
+
+      // Theme-specific premium decorative overlays!
+      const activeThemeId = engine.selectedTheme?.id || 'theme_classic';
+      if (activeThemeId === 'theme_cyber' || activeThemeId.includes('synth') || activeThemeId.includes('noir') || activeThemeId.includes('neon')) {
+        // Futuristic Cyber Laser Slopes
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.38)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(150 - offsetX, 190); ctx.lineTo(150 - offsetX, GROUND_Y);
+        ctx.moveTo(420 - offsetX, 150); ctx.lineTo(420 - offsetX, GROUND_Y);
+        ctx.moveTo(750 - offsetX, 180); ctx.lineTo(750 - offsetX, GROUND_Y);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.28)';
+        ctx.beginPath();
+        ctx.moveTo(100 - offsetX, 230); ctx.lineTo(190 - offsetX, 222);
+        ctx.moveTo(380 - offsetX, 180); ctx.lineTo(460 - offsetX, 172);
+        ctx.moveTo(710 - offsetX, 212); ctx.lineTo(790 - offsetX, 212);
+        ctx.stroke();
+      } else if (activeThemeId === 'theme_volcanic') {
+        // Glowing Magma Fissures!
+        ctx.save();
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 2.0;
+        if (!settings.reduceMotion && !isMobile) {
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = '#f97316';
+        }
+        ctx.beginPath();
+        ctx.moveTo(150 - offsetX, 190); ctx.lineTo(165 - offsetX, 215); ctx.lineTo(160 - offsetX, 240); ctx.lineTo(185 - offsetX, GROUND_Y);
+        ctx.moveTo(420 - offsetX, 150); ctx.lineTo(412 - offsetX, 185); ctx.lineTo(432 - offsetX, 228); ctx.lineTo(418 - offsetX, GROUND_Y);
+        ctx.stroke();
+        ctx.restore();
+      } else if (activeThemeId === 'theme_frozen') {
+        // White Glacier Snow-Caps on mountain tops
+        ctx.fillStyle = '#ffffff';
+        // Glacier Cap 1
+        ctx.beginPath();
+        ctx.moveTo(150 - offsetX, 190);
+        ctx.lineTo(112 - offsetX, 212);
+        ctx.lineTo(188 - offsetX, 212);
+        ctx.closePath();
+        ctx.fill();
+
+        // Glacier Cap 2
+        ctx.beginPath();
+        ctx.moveTo(420 - offsetX, 150);
+        ctx.lineTo(385 - offsetX, 175);
+        ctx.lineTo(455 - offsetX, 175);
+        ctx.closePath();
+        ctx.fill();
+
+        // Glacier Cap 3
+        ctx.beginPath();
+        ctx.moveTo(750 - offsetX, 180);
+        ctx.lineTo(715 - offsetX, 201);
+        ctx.lineTo(785 - offsetX, 201);
+        ctx.closePath();
+        ctx.fill();
+      } else if (activeThemeId === 'theme_golden') {
+        // Majestic golden-halo outlines around mountain ranges
+        ctx.save();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2.2;
+        if (!settings.reduceMotion && !isMobile) {
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = '#fbbf24';
+        }
+        ctx.beginPath();
+        ctx.moveTo(-offsetX, GROUND_Y);
+        ctx.lineTo(150 - offsetX, 190);
+        ctx.lineTo(280 - offsetX, 260);
+        ctx.lineTo(420 - offsetX, 150);
+        ctx.lineTo(580 - offsetX, 275);
+        ctx.lineTo(750 - offsetX, 180);
+        ctx.lineTo(920 - offsetX, 290);
+        ctx.lineTo(1100 - offsetX, GROUND_Y);
+        ctx.stroke();
+        ctx.restore();
+      } else if (activeThemeId === 'theme_valley') {
+        // Bright emerald vegetation banks on peak flanks
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.ellipse(150 - offsetX, 228, 22, 3.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(420 - offsetX, 185, 28, 4.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(750 - offsetX, 218, 25, 3.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
     };
 
-    drawMountains(mountScroll);
-    drawMountains(mountScroll - 600);
-    drawMountains(mountScroll + 600);
+    drawNearMountains(nearMountScroll);
+    drawNearMountains(nearMountScroll - 600);
+    drawNearMountains(nearMountScroll + 600);
 
-    // 4. Clouds layer (Very slow floating drift)
+    // 4. Clouds layer (Very slow floating drift with overlapping detail)
     ctx.fillStyle = skyNightAlpha > 0.5 ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.45)';
     const cloudScroll = (engine.scrollX * 0.15 + engine.time * 0.25) % (VIRTUAL_WIDTH + 300);
     const drawCloud = (cx: number, cy: number, w: number) => {
@@ -1424,26 +1571,78 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       drawTree(xBase + 115, 70);
     }
 
-    // 6. Hard Ground Layer (Full scroll pixel pattern)
+    // 6. Hard Ground Layer with Theme-Specific Premium Effects
     ctx.fillStyle = groundBg;
     ctx.fillRect(0, GROUND_Y, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - GROUND_Y);
 
-    // Ground outline track
-    ctx.fillStyle = '#4b5563';
-    ctx.fillRect(0, GROUND_Y, VIRTUAL_WIDTH, 4);
-
-    // Scrolling checkered path or dirt spots
-    ctx.fillStyle = skyNightAlpha > 0.4 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-    const dirtScroll = (engine.scrollX) % 120;
-    for (let i = -1; i < 11; i++) {
-      const dx = i * 120 - dirtScroll;
-      ctx.fillRect(dx + 10, GROUND_Y + 15, 20, 5);
-      ctx.fillRect(dx + 70, GROUND_Y + 45, 15, 4);
-      ctx.fillRect(dx + 45, GROUND_Y + 30, 8, 8);
-      ctx.fillRect(dx + 100, GROUND_Y + 25, 12, 5);
+    // Glowing Neon/Solid Track Outline
+    const activeThemeId = engine.selectedTheme?.id || 'theme_classic';
+    let trackGlowColor = '#4b5563';
+    if (activeThemeId === 'theme_cyber' || activeThemeId.includes('synth') || activeThemeId.includes('neon')) {
+      trackGlowColor = '#00f2ff';
+    } else if (activeThemeId === 'theme_volcanic') {
+      trackGlowColor = '#f97316';
+    } else if (activeThemeId === 'theme_frozen') {
+      trackGlowColor = '#e0f2fe';
+    } else if (activeThemeId === 'theme_golden') {
+      trackGlowColor = '#fbbf24';
+    } else if (activeThemeId === 'theme_valley') {
+      trackGlowColor = '#22c55e';
     }
 
-    // 7. Draw Active Coins
+    ctx.save();
+    ctx.fillStyle = trackGlowColor;
+    if (trackGlowColor !== '#4b5563' && !settings.reduceMotion && !isMobile) {
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = trackGlowColor;
+    }
+    ctx.fillRect(0, GROUND_Y, VIRTUAL_WIDTH, 4);
+    ctx.restore();
+
+    // Scrolling checkers, perspective grids, or ground fractures
+    const dirtScroll = (engine.scrollX) % 120;
+    if (activeThemeId === 'theme_cyber' || activeThemeId.includes('synth') || activeThemeId.includes('neon')) {
+      // Breathtaking retro-futuristic synthwave perspective floor grids!
+      ctx.strokeStyle = skyNightAlpha > 0.4 ? 'rgba(168, 85, 247, 0.2)' : 'rgba(168, 85, 247, 0.12)';
+      ctx.lineWidth = 1.0;
+      // Horizontal vanishing rows
+      for (let hY = GROUND_Y + 10; hY < VIRTUAL_HEIGHT; hY += 12) {
+        ctx.beginPath();
+        ctx.moveTo(0, hY);
+        ctx.lineTo(VIRTUAL_WIDTH, hY);
+        ctx.stroke();
+      }
+      // Scrolling perspective vertical beams
+      for (let i = -4; i < 22; i++) {
+        const startX = i * 55 - (dirtScroll * 0.8);
+        ctx.beginPath();
+        ctx.moveTo(startX, GROUND_Y);
+        ctx.lineTo(startX * 1.35 - 80, VIRTUAL_HEIGHT);
+        ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle = skyNightAlpha > 0.4 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+      for (let i = -1; i < 11; i++) {
+        const dx = i * 120 - dirtScroll;
+        if (activeThemeId === 'theme_frozen') {
+          // Glacier crack/frost fractures
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+          ctx.lineWidth = 1.0;
+          ctx.beginPath();
+          ctx.moveTo(dx + 20, GROUND_Y + 12);
+          ctx.lineTo(dx + 35, GROUND_Y + 24);
+          ctx.lineTo(dx + 15, GROUND_Y + 38);
+          ctx.stroke();
+        } else {
+          ctx.fillRect(dx + 10, GROUND_Y + 15, 24, 4.5);
+          ctx.fillRect(dx + 70, GROUND_Y + 45, 18, 3.5);
+          ctx.fillRect(dx + 45, GROUND_Y + 30, 8, 8);
+          ctx.fillRect(dx + 100, GROUND_Y + 25, 14, 4.5);
+        }
+      }
+    }
+
+    // 7. Draw Active Coins (Glistening 3D Metallic Golden Pieces)
     engine.coins.forEach(coin => {
       if (coin.collected) return;
       
@@ -1452,6 +1651,10 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       const currentWidth = Math.abs(Math.sin(coin.rotationPhase)) * coin.width;
       
       ctx.save();
+      if (!settings.reduceMotion && !isMobile) {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#fbbf24';
+      }
       ctx.translate(cx, cy);
 
       // Shining outer ring
@@ -1476,16 +1679,25 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       ctx.lineTo(currentWidth / 3.5, 0);
       ctx.stroke();
 
+      // ✨ Animated metal glint horizontal sweeping beam effect!
+      const glintOffset = (engine.time * 0.08) % 2 - 1; // Sweeps from -1 to 1
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(currentWidth * glintOffset, -coin.height / 2);
+      ctx.lineTo(currentWidth * (glintOffset + 0.35), coin.height / 2);
+      ctx.stroke();
+
       ctx.restore();
     });
 
-    // 8. Draw Active Obstacles
+    // 8. Draw Active Obstacles (High-Fidelity Facets & Lighting Models)
     engine.obstacles.forEach(o => {
       ctx.save();
       ctx.translate(o.x, o.y);
 
       if (o.type === 'rock_small') {
-        // Procedural small rock styling
+        // Procedural small rock styling with 3D shadow facets
         ctx.fillStyle = '#6b7280';
         ctx.beginPath();
         ctx.moveTo(0, o.height);
@@ -1496,12 +1708,21 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         ctx.closePath();
         ctx.fill();
 
+        // Faceted Highlight polygon overlay
+        ctx.fillStyle = '#9ca3af';
+        ctx.beginPath();
+        ctx.moveTo(5, 10);
+        ctx.lineTo(15, 0);
+        ctx.lineTo(13, o.height);
+        ctx.closePath();
+        ctx.fill();
+
         // Shading lines
         ctx.strokeStyle = '#374151';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(15, 0);
-        ctx.lineTo(18, o.height);
+        ctx.lineTo(13, o.height);
         ctx.stroke();
       } 
       else if (o.type === 'rock_large') {
@@ -1516,22 +1737,31 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         ctx.closePath();
         ctx.fill();
 
-        // Shading / texture detail
+        // Faceted lighting facet overlay
+        ctx.fillStyle = '#6b7280';
+        ctx.beginPath();
+        ctx.moveTo(10, 20);
+        ctx.lineTo(26, 4);
+        ctx.lineTo(26, o.height);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shading / high-contrast cleft highlights
         ctx.strokeStyle = '#1f2937';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.0;
         ctx.beginPath();
         ctx.moveTo(26, 4);
-        ctx.lineTo(28, o.height);
+        ctx.lineTo(26, o.height);
         ctx.moveTo(44, 15);
         ctx.lineTo(40, o.height);
         ctx.stroke();
       } 
       else if (o.type === 'stump') {
-        // Reddish brown wood log
+        // Wooden tree bark
         ctx.fillStyle = '#78350f';
         ctx.fillRect(5, 10, o.width - 10, o.height - 10);
         
-        // Root base stretching sideways
+        // Root base stretching on soil
         ctx.beginPath();
         ctx.moveTo(0, o.height);
         ctx.lineTo(5, 10);
@@ -1540,7 +1770,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         ctx.closePath();
         ctx.fill();
 
-        // Target rings
+        // Stump rings top
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
         ctx.ellipse(o.width / 2, 10, o.width / 2.5, 3.5, 0, 0, Math.PI * 2);
@@ -1550,39 +1780,59 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         ctx.beginPath();
         ctx.ellipse(o.width / 2, 10, o.width / 4, 1.8, 0, 0, Math.PI * 2);
         ctx.stroke();
+
+        // Natural woody knots textures on sides
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(o.width * 0.3, 19, 4, 4);
+        ctx.fillRect(o.width * 0.65, 27, 3, 3);
       } 
       else if (o.type === 'barrel') {
-        // Classic metal banded wood barrel
+        // Classic wood barrel
         ctx.fillStyle = '#b45309';
         ctx.fillRect(2, 2, o.width - 4, o.height - 4);
         
         ctx.fillStyle = '#92400e';
-        // Barrel rounded rims top/bottom
         ctx.fillRect(0, 0, o.width, 3);
         ctx.fillRect(0, o.height - 3, o.width, 3);
 
-        // Metallic strap bands
+        // Metallic strap bands with iron rivets
         ctx.fillStyle = '#9ca3af';
         ctx.fillRect(0, o.height * 0.3, o.width, 3.5);
         ctx.fillRect(0, o.height * 0.7, o.width, 3.5);
+
+        // Individual rivets
+        ctx.fillStyle = '#4b5563';
+        for (let rx = 3; rx < o.width; rx += 9) {
+          ctx.beginPath();
+          ctx.arc(rx, o.height * 0.3 + 1.8, 0.9, 0, Math.PI * 2);
+          ctx.arc(rx, o.height * 0.7 + 1.8, 0.9, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Wood planks outlines
+        ctx.strokeStyle = 'rgba(75, 42, 13, 0.45)';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        ctx.moveTo(o.width * 0.32, 3); ctx.lineTo(o.width * 0.32, o.height - 3);
+        ctx.moveTo(o.width * 0.68, 3); ctx.lineTo(o.width * 0.68, o.height - 3);
+        ctx.stroke();
       } 
       else if (o.type === 'bird') {
         // Pterodactyl style bird
         ctx.fillStyle = '#b91c1c';
         
-        // Wing Flapping calculations
         const wingsUp = Math.sin(o.wingPhase) > 0;
         
-        // Head / Beak
+        // Head / Amber Beak
         ctx.fillRect(o.width * 0.65, 6, 12, 5);
-        ctx.fillStyle = '#fbbf24'; // orange beak tip
+        ctx.fillStyle = '#fbbf24';
         ctx.fillRect(o.width * 0.65 + 12, 8, 6, 3);
 
         ctx.fillStyle = '#b91c1c';
-        // Body log
+        // Primary Body
         ctx.fillRect(o.width * 0.15, 6, o.width * 0.55, 10);
         
-        // Tail feathers
+        // Feather Tail
         ctx.beginPath();
         ctx.moveTo(0, 11);
         ctx.lineTo(o.width * 0.2, 5);
@@ -1590,41 +1840,50 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         ctx.closePath();
         ctx.fill();
 
-        // Dynamic wings
+        // Dynamic flapping wings
         if (wingsUp) {
           ctx.beginPath();
           ctx.moveTo(o.width * 0.4, 6);
-          ctx.lineTo(o.width * 0.35, -12); // wing up
-          ctx.lineTo(o.width * 0.5, 6);
+          ctx.lineTo(o.width * 0.34, -13);
+          ctx.lineTo(o.width * 0.51, 6);
           ctx.closePath();
           ctx.fill();
         } else {
           ctx.beginPath();
           ctx.moveTo(o.width * 0.4, 14);
-          ctx.lineTo(o.width * 0.3, 28); // wing down
-          ctx.lineTo(o.width * 0.5, 14);
+          ctx.lineTo(o.width * 0.29, 29);
+          ctx.lineTo(o.width * 0.51, 14);
           ctx.closePath();
           ctx.fill();
         }
       } 
       else if (o.type === 'robot_bird') {
-        // Glowing futuristic hunter drone
+        // Futuristic floating sentry/hunter drone
         ctx.fillStyle = '#475569';
         ctx.fillRect(5, 5, o.width - 10, o.height - 10);
 
-        // Glowing red visor
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(o.width - 15, 10, 10, 4);
+        // Cyber blue circuit decals on body
+        ctx.fillStyle = '#06b6d4';
+        ctx.fillRect(9, 8, 4, 2);
+        ctx.fillRect(16, 14, 5, 2);
 
-        // Rotating rear turbine
+        // Glowing targeting ruby visor
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(o.width - 15, 9, 10, 4.5);
+
+        // Rotating exhaust fan
         const turbOffset = Math.sin(o.wingPhase * 1.5) * 6;
         ctx.fillStyle = '#38bdf8';
         ctx.fillRect(0, 12 + turbOffset/2, 4, 8 - (turbOffset ? 2 : 0));
 
-        // Jet blast thruster circle particles or tail glow
-        ctx.fillStyle = `rgba(56, 189, 248, ${Math.random() * 0.5 + 0.55})`;
+        // Ion thrust propulsion bloom
+        const thrustGrad = ctx.createLinearGradient(-15, 16, 0, 16);
+        thrustGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+        thrustGrad.addColorStop(0.6, 'rgba(6, 182, 212, 0.7)');
+        thrustGrad.addColorStop(1, '#22d3ee');
+        ctx.fillStyle = thrustGrad;
         ctx.beginPath();
-        ctx.arc(-2, 16, 2.5 + Math.random() * 2, 0, Math.PI * 2);
+        ctx.ellipse(-7, 16, 8, 2.8, 0, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -1649,18 +1908,32 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     }
 
     if (c.runnerType === 'dino') {
-      // Draw Classic Dino stylized Rex
+      // Draw Classic Dino stylized Rex with gorgeous scale highlights and spikes
       ctx.fillStyle = c.color;
       
-      // Main Body torso
+      // Main Body Torso
       ctx.fillRect(10, 12, 28, 22);
 
+      // Spine Spikes (Very Dino!)
+      ctx.fillStyle = c.accentColor; // spike colors
+      ctx.beginPath();
+      ctx.moveTo(10, 12); ctx.lineTo(13, 8); ctx.lineTo(16, 12);
+      ctx.moveTo(18, 12); ctx.lineTo(21, 8); ctx.lineTo(24, 12);
+      ctx.moveTo(6, 18);  ctx.lineTo(8, 14); ctx.lineTo(11, 18);
+      ctx.fill();
+
+      ctx.fillStyle = c.color;
       // Tail trailing
       ctx.fillRect(0, 18, 10, 12);
       ctx.fillRect(2, 30, 4, 4);
 
-      // T-Rex snout head
+      // T-Rex snout head (with custom highlighted brow ridge)
       ctx.fillRect(22, 0, 24, 14);
+      // Highlight on crown of head
+      ctx.fillStyle = '#86efac'; // soft bright green highlight
+      ctx.fillRect(24, 0, 18, 3);
+
+      ctx.fillStyle = c.color;
       // Cheek/neck hook
       ctx.fillRect(30, 14, 8, 6);
 
@@ -1675,7 +1948,14 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         ctx.moveTo(38, 4); ctx.lineTo(34, 8);
         ctx.stroke();
       } else {
-        ctx.fillRect(36, 4, 3.5, 3.5); // Cute eye
+        // Blinking eye calculation
+        const isBlinking = Math.floor(engine.time) % 15 === 0 && (engine.time % 1) < 0.2;
+        if (!isBlinking) {
+          ctx.fillRect(36, 4, 3.5, 3.5); // Cute eye
+          // White pupil dot
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(37, 4.5, 1.2, 1.2);
+        }
       }
 
       // Small dinosaur hands
@@ -1702,11 +1982,16 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       }
     } 
     else if (c.runnerType === 'robot') {
-      // Cyber cybernetic metal running droid
+      // Cyber cybernetic metal running droid with high tech visuals
       ctx.fillStyle = c.color;
       
-      // Metal torso body
+      // Metal torso body with side exhaust port lines
       ctx.fillRect(8, 10, 32, 24);
+
+      // Torso core plating grid lines
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(12, 14, 4, 16);
+      ctx.fillRect(32, 14, 4, 16);
       
       // Arm/Joint
       ctx.fillStyle = c.accentColor;
@@ -1716,9 +2001,14 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       ctx.fillStyle = c.color;
       ctx.fillRect(17, 0, 16, 10);
       
-      // Glowing cycling visor
+      // Glowing cycling visor with visual shine strip
       ctx.fillStyle = '#22d3ee'; // bright cyan glow
       ctx.fillRect(25, 3, 8, 3);
+      if (!settings.reduceMotion) {
+        const sweep = Math.abs(Math.sin(engine.time * 0.1)) * 6;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(25 + sweep, 3, 2, 3);
+      }
 
       // Jetpack back nozzle
       ctx.fillStyle = '#475569';
@@ -1747,31 +2037,39 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       }
     } 
     else if (c.runnerType === 'fox') {
-      // Little running crimson fox with bushy orange tail
+      // Little running crimson fox with bushy tail and soft updates
+      const breath = Math.sin(engine.time * 0.18) * 1.5;
       ctx.fillStyle = c.color;
 
-      // Torso body
-      ctx.fillRect(8, 12, 30, 20);
+      // Torso body with breathing effect
+      ctx.fillRect(8, 12, 30, 20 + breath * 0.35);
 
       // Big bushy tail
-      ctx.fillStyle = c.accentColor; // tail tip usually white or amber
-      ctx.fillRect(0, 16, 8, 12);
+      ctx.fillStyle = c.accentColor; // tail tip usually white/amber
+      ctx.fillRect(0, 16 + breath * 0.2, 8, 12);
       ctx.fillStyle = c.color;
-      ctx.fillRect(2, 20, 6, 10);
+      ctx.fillRect(2, 20 + breath * 0.2, 6, 10);
 
       // Fox triangular head
       ctx.fillRect(24, 2, 16, 12);
-      // Ears
+      // Erect triangle ears with obsidian tips
       ctx.beginPath();
-      ctx.moveTo(26, 2); ctx.lineTo(26, -5); ctx.lineTo(31, 2);
-      ctx.moveTo(34, 2); ctx.lineTo(38, -5); ctx.lineTo(39, 2);
+      ctx.moveTo(26, 2); ctx.lineTo(26, -6); ctx.lineTo(31, 2);
+      ctx.moveTo(34, 2); ctx.lineTo(38, -6); ctx.lineTo(39, 2);
+      ctx.fill();
+
+      // Ear tips in Dark Charcoal
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(26, -2); ctx.lineTo(26, -6); ctx.lineTo(28, -2);
+      ctx.moveTo(36, -2); ctx.lineTo(38, -6); ctx.lineTo(39, -2);
       ctx.fill();
 
       // White cheek patches
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(32, 8, 8, 4);
 
-      // Little eye
+      // Cute intelligent fox eye
       ctx.fillStyle = '#1e293b';
       ctx.fillRect(30, 5, 2.5, 2.5);
 
@@ -1792,7 +2090,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       }
     } 
     else if (c.runnerType === 'sphere') {
-      // Glowing High-tech energy orb (squashes and stretches dynamically)
+      // Glowing High-tech energy orb (squashes and stretches dynamically with multiple orbit components)
       const rad = 23;
       const cx = engine.playerWidth / 2;
       const cy = drawHeight / 2;
@@ -1802,14 +2100,23 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       const stretchW = rad * (2 - squishRatio);
       const stretchH = rad * squishRatio;
 
-      ctx.shadowBlur = (settings.reduceMotion || isMobile) ? 0 : 15;
-      ctx.shadowColor = c.color;
+      ctx.save();
+      if (!settings.reduceMotion && !isMobile) {
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = c.color;
+      }
 
-      ctx.fillStyle = c.color;
+      // Outer Glowing Orb Base Shell
+      const orbGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, stretchW);
+      orbGrad.addColorStop(0, '#ffffff');
+      orbGrad.addColorStop(0.35, c.color);
+      orbGrad.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
+      ctx.fillStyle = orbGrad;
+
       ctx.beginPath();
       ctx.ellipse(cx, cy, stretchW, stretchH, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0; // reset
+      ctx.restore();
 
       // Rotating inner technological core
       ctx.strokeStyle = c.accentColor;
@@ -1817,11 +2124,22 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(engine.time * 0.08);
+
+      // Orbit Ring 1
       ctx.beginPath();
-      ctx.arc(0, 0, stretchW * 0.6, 0, Math.PI, false); // top crescent ring
+      ctx.ellipse(0, 0, stretchW * 0.65, stretchH * 0.25, Math.PI / 4, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Orbit Ring 2
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, stretchW * 0.45, stretchH * 0.15, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Core white shining gem reactor
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(-3, -3, 6, 6); // white core center
+      ctx.fillRect(-3, -3, 6, 6);
       ctx.restore();
     }
 
@@ -2001,7 +2319,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onClick={handleCanvasClick}
-      className={`relative w-full ${isFullscreen ? 'h-full rounded-none' : 'h-[320px] md:h-[400px] rounded-2xl'} overflow-hidden bg-slate-900 shadow-inner select-none outline-none border ${isFullscreen ? 'border-none' : 'border-slate-800'} cursor-pointer`}
+      className={`relative w-full touch-none ${isFullscreen ? 'h-full rounded-none' : 'h-[320px] md:h-[400px] rounded-2xl'} overflow-hidden bg-slate-900 shadow-inner select-none outline-none border ${isFullscreen ? 'border-none' : 'border-slate-800'} cursor-pointer`}
     >
       <canvas 
         ref={canvasRef} 

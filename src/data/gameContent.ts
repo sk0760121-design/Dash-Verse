@@ -15,18 +15,18 @@ function toRoman(num: number): string {
 
 // 12 Runners / Characters (10+ required)
 export const INITIAL_CHARACTERS: Character[] = [
-  { id: 'classic_dino', name: '🦖 Classic Rex', cost: 0, unlocked: true, description: 'Default green dinosaur. Grounded running (No Double Jumps Allowed!)', color: '#10b981', accentColor: '#34d399', runnerType: 'dino' },
-  { id: 'cyber_run', name: '🤖 Cyber Runner', cost: 50, unlocked: false, description: 'Metal plates and booster jet. Double Jump Capability enabled.', color: '#06b6d4', accentColor: '#22d3ee', runnerType: 'robot' },
-  { id: 'pixie_fox', name: '🦊 Pixie Ninja', cost: 120, unlocked: false, description: 'Swift crimson woodland runner. Double Jump Capability enabled.', color: '#ef4444', accentColor: '#f97316', runnerType: 'fox' },
-  { id: 'neon_sphere', name: '🔮 Neon Core', cost: 250, unlocked: false, description: 'Futuristic pulsing anti-gravity orb. Double Jump Capability enabled.', color: '#a855f7', accentColor: '#f43f5e', runnerType: 'sphere' },
-  { id: 'solar_phoenix', name: '🔥 Solar Phoenix', cost: 300, unlocked: false, description: 'Swift mythical bird reborn from cosmic stardust. Double Jump enabled.', color: '#f97316', accentColor: '#ef4444', runnerType: 'fox' },
-  { id: 'chrono_bot', name: '⏳ Chrono-Keeper', cost: 350, unlocked: false, description: 'A time-traveling android sent from the distant year 3026. Double Jump enabled.', color: '#94a3b8', accentColor: '#3b82f6', runnerType: 'robot' },
-  { id: 'shadow_worg', name: '🐺 Shadow Eclipse', cost: 400, unlocked: false, description: 'Void forest predator traveling through shadow realms. Double Jump enabled.', color: '#312e81', accentColor: '#6366f1', runnerType: 'fox' },
-  { id: 'lunar_rover', name: '🌙 Lunar Explorer', cost: 450, unlocked: false, description: 'Heavy-duty moon vehicle upgraded for digital skies. Double Jump enabled.', color: '#0284c7', accentColor: '#38bdf8', runnerType: 'robot' },
-  { id: 'magma_golem', name: '🌋 Obsidian Core', cost: 500, unlocked: false, description: 'Melting igneous golem containing ancient molten magma. Double Jump enabled.', color: '#7f1d1d', accentColor: '#f97316', runnerType: 'sphere' },
-  { id: 'aero_glider', name: '🪁 Aero Strider', cost: 550, unlocked: false, description: 'Aerodynamic sphere built for perpetual atmospheric glide. Double Jump enabled.', color: '#10b981', accentColor: '#34d399', runnerType: 'sphere' },
-  { id: 'plasma_rex', name: '⚡ Plasma Raptor', cost: 600, unlocked: false, description: 'Prehistoric beast fused with supercharged plasma reactors! Double Jump enabled.', color: '#d946ef', accentColor: '#a855f7', runnerType: 'dino' },
-  { id: 'prism_drifter', name: '🌈 Prism Spirit', cost: 750, unlocked: false, description: 'Radiasing spirit of light that bends rainbow paths. Double Jump enabled.', color: '#ec4899', accentColor: '#f43f5e', runnerType: 'fox' }
+  { id: 'classic_dino', name: '🦖 Classic 3D Rex', cost: 0, unlocked: true, description: 'Isometric 3D green voxel dinosaur. Grounded running (No Double Jumps Allowed!)', color: '#10b981', accentColor: '#34d399', runnerType: 'dino' },
+  { id: 'cyber_run', name: '🤖 3D Cyber Runner', cost: 50, unlocked: false, description: 'Volumetric 3D metal droid with jetpack boosters. Double Jump Enabled.', color: '#06b6d4', accentColor: '#22d3ee', runnerType: 'robot' },
+  { id: 'pixie_fox', name: '🦊 3D Pixie Ninja', cost: 120, unlocked: false, description: 'Elegantly sculpted crimson 3D fox runner. Double Jump Enabled.', color: '#ef4444', accentColor: '#f97316', runnerType: 'fox' },
+  { id: 'neon_sphere', name: '🔮 3D Neon Core', cost: 250, unlocked: false, description: 'Anti-gravity 3D energy orb with outer orbital tech rings. Double Jump Enabled.', color: '#a855f7', accentColor: '#f43f5e', runnerType: 'sphere' },
+  { id: 'solar_phoenix', name: '🔥 3D Solar Phoenix', cost: 300, unlocked: false, description: 'Vibrant 3D crimson flame-wing bird forged in cosmic heat. Double Jump Enabled.', color: '#f97316', accentColor: '#ef4444', runnerType: 'fox' },
+  { id: 'chrono_bot', name: '⏳ 3D Chrono-Keeper', cost: 350, unlocked: false, description: 'Chunky 3D alloy android with temporal speed plates. Double Jump Enabled.', color: '#94a3b8', accentColor: '#3b82f6', runnerType: 'robot' },
+  { id: 'shadow_worg', name: '🐺 3D Shadow Worg', cost: 400, unlocked: false, description: 'Mystic 3D dark-matter predator shifting through dimensional walls. Double Jump.', color: '#312e81', accentColor: '#6366f1', runnerType: 'fox' },
+  { id: 'lunar_rover', name: '🌙 3D Lunar Rover', cost: 450, unlocked: false, description: 'All-terrain 3D space crawler with titanium-reinforced tires. Double Jump.', color: '#0284c7', accentColor: '#38bdf8', runnerType: 'robot' },
+  { id: 'magma_golem', name: '🌋 3D Obsidian Core', cost: 500, unlocked: false, description: '3D igneous core containing live-flowing molten magma. Double Jump Enabled.', color: '#7f1d1d', accentColor: '#f97316', runnerType: 'sphere' },
+  { id: 'aero_glider', name: '🪁 3D Aero Strider', cost: 550, unlocked: false, description: 'Ultralight aerodynamic 3D glider sphere optimizing atmospheric wind. Double Jump.', color: '#10b981', accentColor: '#34d399', runnerType: 'sphere' },
+  { id: 'plasma_rex', name: '⚡ 3D Plasma Raptor', cost: 600, unlocked: false, description: 'Fearsome prehistoric rex with 3D neon plasma sub-conductors. Double Jump.', color: '#d946ef', accentColor: '#a855f7', runnerType: 'dino' },
+  { id: 'prism_drifter', name: '🌈 3D Prism Spirit', cost: 750, unlocked: false, description: 'Prismatic 3D light-sculpted runner mapping vibrant spectrum trails. Double Jump.', color: '#ec4899', accentColor: '#f43f5e', runnerType: 'fox' }
 ];
 
 // 12 Trails (10+ required)

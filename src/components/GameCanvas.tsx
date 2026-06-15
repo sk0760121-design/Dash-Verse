@@ -1572,10 +1572,6 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     }
 
     // 6. Hard Ground Layer with Theme-Specific Premium Effects
-    ctx.fillStyle = groundBg;
-    ctx.fillRect(0, GROUND_Y, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - GROUND_Y);
-
-    // Glowing Neon/Solid Track Outline
     const activeThemeId = engine.selectedTheme?.id || 'theme_classic';
     let trackGlowColor = '#4b5563';
     if (activeThemeId === 'theme_cyber' || activeThemeId.includes('synth') || activeThemeId.includes('neon')) {
@@ -1590,54 +1586,123 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       trackGlowColor = '#22c55e';
     }
 
-    ctx.save();
-    ctx.fillStyle = trackGlowColor;
-    if (trackGlowColor !== '#4b5563' && !settings.reduceMotion && !isMobile) {
-      ctx.shadowBlur = 12;
-      ctx.shadowColor = trackGlowColor;
-    }
-    ctx.fillRect(0, GROUND_Y, VIRTUAL_WIDTH, 4);
-    ctx.restore();
+    if (settings.enable3D) {
+      // 3D Receding Trapezoidal High-Fidelity Horizon Track
+      ctx.fillStyle = groundBg;
+      ctx.beginPath();
+      ctx.moveTo(80, GROUND_Y);
+      ctx.lineTo(VIRTUAL_WIDTH - 80, GROUND_Y);
+      ctx.lineTo(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+      ctx.lineTo(0, VIRTUAL_HEIGHT);
+      ctx.closePath();
+      ctx.fill();
 
-    // Scrolling checkers, perspective grids, or ground fractures
-    const dirtScroll = (engine.scrollX) % 120;
-    if (activeThemeId === 'theme_cyber' || activeThemeId.includes('synth') || activeThemeId.includes('neon')) {
-      // Breathtaking retro-futuristic synthwave perspective floor grids!
-      ctx.strokeStyle = skyNightAlpha > 0.4 ? 'rgba(168, 85, 247, 0.2)' : 'rgba(168, 85, 247, 0.12)';
-      ctx.lineWidth = 1.0;
-      // Horizontal vanishing rows
-      for (let hY = GROUND_Y + 10; hY < VIRTUAL_HEIGHT; hY += 12) {
+      // Receding 3D Track outer glowing borders
+      ctx.save();
+      ctx.strokeStyle = trackGlowColor;
+      ctx.lineWidth = 3.5;
+      if (trackGlowColor !== '#4b5563' && !settings.reduceMotion && !isMobile) {
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = trackGlowColor;
+      }
+      // Left boundary line
+      ctx.beginPath();
+      ctx.moveTo(80, GROUND_Y);
+      ctx.lineTo(0, VIRTUAL_HEIGHT);
+      ctx.stroke();
+
+      // Right boundary line
+      ctx.beginPath();
+      ctx.moveTo(VIRTUAL_WIDTH - 80, GROUND_Y);
+      ctx.lineTo(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+      ctx.stroke();
+      ctx.restore();
+
+      // Shaded road center lane dividers scrolling in 3D perspective
+      const scrollSpeed = engine.scrollX * 0.8;
+      ctx.strokeStyle = skyNightAlpha > 0.4 ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+      if (activeThemeId === 'theme_cyber' || activeThemeId.includes('synth') || activeThemeId.includes('neon')) {
+        ctx.strokeStyle = skyNightAlpha > 0.4 ? 'rgba(124, 58, 237, 0.35)' : 'rgba(124, 58, 237, 0.22)';
+      }
+      ctx.lineWidth = 1.5;
+
+      // Render perspective horizontal grid lines that accelerate as they approach the screen
+      for (let i = 0; i < 15; i++) {
+        const lineZ = ((i * 0.07) + (scrollSpeed * 0.00065)) % 1.0;
+        const ratio = Math.pow(lineZ, 2.2); // Exponential depth progression
+        const lineY = GROUND_Y + ratio * (VIRTUAL_HEIGHT - GROUND_Y);
+        // Map road width based on trapezoidal expansion
+        const lineW = (VIRTUAL_WIDTH - 160) + ratio * 160;
+        const lineXL = VIRTUAL_WIDTH/2 - lineW/2;
+        const lineXR = VIRTUAL_WIDTH/2 + lineW/2;
+
         ctx.beginPath();
-        ctx.moveTo(0, hY);
-        ctx.lineTo(VIRTUAL_WIDTH, hY);
+        ctx.moveTo(lineXL, lineY);
+        ctx.lineTo(lineXR, lineY);
         ctx.stroke();
       }
-      // Scrolling perspective vertical beams
-      for (let i = -4; i < 22; i++) {
-        const startX = i * 55 - (dirtScroll * 0.8);
+
+      // Draw converging vertical perspective floor beams
+      const linesCount = 8;
+      for (let i = 0; i <= linesCount; i++) {
+        const t = i / linesCount;
+        const topX = 80 + t * (VIRTUAL_WIDTH - 160);
+        const botX = t * VIRTUAL_WIDTH;
+
         ctx.beginPath();
-        ctx.moveTo(startX, GROUND_Y);
-        ctx.lineTo(startX * 1.35 - 80, VIRTUAL_HEIGHT);
+        ctx.moveTo(topX, GROUND_Y);
+        ctx.lineTo(botX, VIRTUAL_HEIGHT);
         ctx.stroke();
       }
     } else {
-      ctx.fillStyle = skyNightAlpha > 0.4 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
-      for (let i = -1; i < 11; i++) {
-        const dx = i * 120 - dirtScroll;
-        if (activeThemeId === 'theme_frozen') {
-          // Glacier crack/frost fractures
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-          ctx.lineWidth = 1.0;
+      // Classic 2D Ground Layer fallback
+      ctx.fillStyle = groundBg;
+      ctx.fillRect(0, GROUND_Y, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - GROUND_Y);
+
+      ctx.save();
+      ctx.fillStyle = trackGlowColor;
+      if (trackGlowColor !== '#4b5563' && !settings.reduceMotion && !isMobile) {
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = trackGlowColor;
+      }
+      ctx.fillRect(0, GROUND_Y, VIRTUAL_WIDTH, 4);
+      ctx.restore();
+
+      const dirtScroll = (engine.scrollX) % 120;
+      if (activeThemeId === 'theme_cyber' || activeThemeId.includes('synth') || activeThemeId.includes('neon')) {
+        ctx.strokeStyle = skyNightAlpha > 0.4 ? 'rgba(168, 85, 247, 0.2)' : 'rgba(168, 85, 247, 0.12)';
+        ctx.lineWidth = 1.0;
+        for (let hY = GROUND_Y + 10; hY < VIRTUAL_HEIGHT; hY += 12) {
           ctx.beginPath();
-          ctx.moveTo(dx + 20, GROUND_Y + 12);
-          ctx.lineTo(dx + 35, GROUND_Y + 24);
-          ctx.lineTo(dx + 15, GROUND_Y + 38);
+          ctx.moveTo(0, hY);
+          ctx.lineTo(VIRTUAL_WIDTH, hY);
           ctx.stroke();
-        } else {
-          ctx.fillRect(dx + 10, GROUND_Y + 15, 24, 4.5);
-          ctx.fillRect(dx + 70, GROUND_Y + 45, 18, 3.5);
-          ctx.fillRect(dx + 45, GROUND_Y + 30, 8, 8);
-          ctx.fillRect(dx + 100, GROUND_Y + 25, 14, 4.5);
+        }
+        for (let i = -4; i < 22; i++) {
+          const startX = i * 55 - (dirtScroll * 0.8);
+          ctx.beginPath();
+          ctx.moveTo(startX, GROUND_Y);
+          ctx.lineTo(startX * 1.35 - 80, VIRTUAL_HEIGHT);
+          ctx.stroke();
+        }
+      } else {
+        ctx.fillStyle = skyNightAlpha > 0.4 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+        for (let i = -1; i < 11; i++) {
+          const dx = i * 120 - dirtScroll;
+          if (activeThemeId === 'theme_frozen') {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.moveTo(dx + 20, GROUND_Y + 12);
+            ctx.lineTo(dx + 35, GROUND_Y + 24);
+            ctx.lineTo(dx + 15, GROUND_Y + 38);
+            ctx.stroke();
+          } else {
+            ctx.fillRect(dx + 10, GROUND_Y + 15, 24, 4.5);
+            ctx.fillRect(dx + 70, GROUND_Y + 45, 18, 3.5);
+            ctx.fillRect(dx + 45, GROUND_Y + 30, 8, 8);
+            ctx.fillRect(dx + 100, GROUND_Y + 25, 14, 4.5);
+          }
         }
       }
     }
@@ -1650,45 +1715,94 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       const cy = coin.y + coin.height / 2;
       const currentWidth = Math.abs(Math.sin(coin.rotationPhase)) * coin.width;
       
-      ctx.save();
-      if (!settings.reduceMotion && !isMobile) {
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#fbbf24';
+      if (settings.enable3D) {
+        // Glistening 3D Extruded Cylinder Disk
+        const extrusionDepth = 3.5;
+        for (let d = extrusionDepth; d >= 0; d -= 0.7) {
+          ctx.save();
+          if (!settings.reduceMotion && !isMobile && d === 0) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#fbbf24';
+          }
+          // Shift each layer along a diagonal depth coordinate to create volumetric thickness!
+          ctx.translate(cx - d * 0.7, cy + d * 0.4);
+
+          // Deep golden bronze shadow layers for the backside, bright yellow on the final top cover
+          if (d > 0) {
+            ctx.fillStyle = '#92400e'; // Solid back edge shadow
+            ctx.beginPath();
+            ctx.ellipse(0, 0, (currentWidth/2) + 0.6, (coin.height/2) + 0.6, 0, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            // Front cover
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, currentWidth/2, coin.height/2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Inner design cross
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.0;
+            ctx.beginPath();
+            ctx.moveTo(0, -coin.height / 3.5);
+            ctx.lineTo(0, coin.height / 3.5);
+            ctx.moveTo(-currentWidth / 3.5, 0);
+            ctx.lineTo(currentWidth / 3.5, 0);
+            ctx.stroke();
+
+            // Specular reflections sweeps
+            const glintOffset = (engine.time * 0.08) % 2 - 1;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(currentWidth * glintOffset, -coin.height / 2);
+            ctx.lineTo(currentWidth * (glintOffset + 0.3), coin.height / 2);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      } else {
+        // Classic 2D coin fallback
+        ctx.save();
+        if (!settings.reduceMotion && !isMobile) {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#fbbf24';
+        }
+        ctx.translate(cx, cy);
+
+        // Shining outer ring
+        ctx.fillStyle = '#b45309'; // dark gold outer rim
+        ctx.beginPath();
+        ctx.ellipse(0, 0, (currentWidth/2) + 1.5, (coin.height/2) + 1.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shiny core
+        ctx.fillStyle = '#fbbf24'; // bright yellow coin face
+        ctx.beginPath();
+        ctx.ellipse(0, 0, currentWidth/2, coin.height/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner coin symbol star/cross
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -coin.height / 3.5);
+        ctx.lineTo(0, coin.height / 3.5);
+        ctx.moveTo(-currentWidth / 3.5, 0);
+        ctx.lineTo(currentWidth / 3.5, 0);
+        ctx.stroke();
+
+        // ✨ Animated metal glint horizontal sweeping beam effect!
+        const glintOffset = (engine.time * 0.08) % 2 - 1; // Sweeps from -1 to 1
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(currentWidth * glintOffset, -coin.height / 2);
+        ctx.lineTo(currentWidth * (glintOffset + 0.35), coin.height / 2);
+        ctx.stroke();
+
+        ctx.restore();
       }
-      ctx.translate(cx, cy);
-
-      // Shining outer ring
-      ctx.fillStyle = '#b45309'; // dark gold outer rim
-      ctx.beginPath();
-      ctx.ellipse(0, 0, (currentWidth/2) + 1.5, (coin.height/2) + 1.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Shiny core
-      ctx.fillStyle = '#fbbf24'; // bright yellow coin face
-      ctx.beginPath();
-      ctx.ellipse(0, 0, currentWidth/2, coin.height/2, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Inner coin symbol star/cross
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(0, -coin.height / 3.5);
-      ctx.lineTo(0, coin.height / 3.5);
-      ctx.moveTo(-currentWidth / 3.5, 0);
-      ctx.lineTo(currentWidth / 3.5, 0);
-      ctx.stroke();
-
-      // ✨ Animated metal glint horizontal sweeping beam effect!
-      const glintOffset = (engine.time * 0.08) % 2 - 1; // Sweeps from -1 to 1
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(currentWidth * glintOffset, -coin.height / 2);
-      ctx.lineTo(currentWidth * (glintOffset + 0.35), coin.height / 2);
-      ctx.stroke();
-
-      ctx.restore();
     });
 
     // 8. Draw Active Obstacles (High-Fidelity Facets & Lighting Models)
@@ -1696,195 +1810,507 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       ctx.save();
       ctx.translate(o.x, o.y);
 
-      if (o.type === 'rock_small') {
-        // Procedural small rock styling with 3D shadow facets
-        ctx.fillStyle = '#6b7280';
-        ctx.beginPath();
-        ctx.moveTo(0, o.height);
-        ctx.lineTo(5, 10);
-        ctx.lineTo(15, 0);
-        ctx.lineTo(24, 7);
-        ctx.lineTo(o.width, o.height);
-        ctx.closePath();
-        ctx.fill();
-
-        // Faceted Highlight polygon overlay
-        ctx.fillStyle = '#9ca3af';
-        ctx.beginPath();
-        ctx.moveTo(5, 10);
-        ctx.lineTo(15, 0);
-        ctx.lineTo(13, o.height);
-        ctx.closePath();
-        ctx.fill();
-
-        // Shading lines
-        ctx.strokeStyle = '#374151';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(15, 0);
-        ctx.lineTo(13, o.height);
-        ctx.stroke();
-      } 
-      else if (o.type === 'rock_large') {
-        ctx.fillStyle = '#4b5563';
-        ctx.beginPath();
-        ctx.moveTo(0, o.height);
-        ctx.lineTo(10, 20);
-        ctx.lineTo(26, 4);
-        ctx.lineTo(44, 15);
-        ctx.lineTo(52, 0);
-        ctx.lineTo(o.width, o.height);
-        ctx.closePath();
-        ctx.fill();
-
-        // Faceted lighting facet overlay
-        ctx.fillStyle = '#6b7280';
-        ctx.beginPath();
-        ctx.moveTo(10, 20);
-        ctx.lineTo(26, 4);
-        ctx.lineTo(26, o.height);
-        ctx.closePath();
-        ctx.fill();
-
-        // Shading / high-contrast cleft highlights
-        ctx.strokeStyle = '#1f2937';
-        ctx.lineWidth = 2.0;
-        ctx.beginPath();
-        ctx.moveTo(26, 4);
-        ctx.lineTo(26, o.height);
-        ctx.moveTo(44, 15);
-        ctx.lineTo(40, o.height);
-        ctx.stroke();
-      } 
-      else if (o.type === 'stump') {
-        // Wooden tree bark
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(5, 10, o.width - 10, o.height - 10);
-        
-        // Root base stretching on soil
-        ctx.beginPath();
-        ctx.moveTo(0, o.height);
-        ctx.lineTo(5, 10);
-        ctx.lineTo(o.width - 5, 10);
-        ctx.lineTo(o.width, o.height);
-        ctx.closePath();
-        ctx.fill();
-
-        // Stump rings top
-        ctx.fillStyle = '#f59e0b';
-        ctx.beginPath();
-        ctx.ellipse(o.width / 2, 10, o.width / 2.5, 3.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = '#d97706';
-        ctx.beginPath();
-        ctx.ellipse(o.width / 2, 10, o.width / 4, 1.8, 0, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Natural woody knots textures on sides
-        ctx.fillStyle = '#451a03';
-        ctx.fillRect(o.width * 0.3, 19, 4, 4);
-        ctx.fillRect(o.width * 0.65, 27, 3, 3);
-      } 
-      else if (o.type === 'barrel') {
-        // Classic wood barrel
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(2, 2, o.width - 4, o.height - 4);
-        
-        ctx.fillStyle = '#92400e';
-        ctx.fillRect(0, 0, o.width, 3);
-        ctx.fillRect(0, o.height - 3, o.width, 3);
-
-        // Metallic strap bands with iron rivets
-        ctx.fillStyle = '#9ca3af';
-        ctx.fillRect(0, o.height * 0.3, o.width, 3.5);
-        ctx.fillRect(0, o.height * 0.7, o.width, 3.5);
-
-        // Individual rivets
-        ctx.fillStyle = '#4b5563';
-        for (let rx = 3; rx < o.width; rx += 9) {
+      // Render 3D dynamic drop shadow on the receding track floor for flying birds / drones
+      if (settings.enable3D && (o.type === 'bird' || o.type === 'robot_bird')) {
+        const pHeight = GROUND_Y - o.y;
+        if (pHeight > 0) {
+          ctx.save();
+          const distanceFactor = Math.max(0.1, 1 - (pHeight / 300));
+          const shadowW = o.width * 0.65 * distanceFactor;
+          const shadowAlpha = 0.45 * distanceFactor;
+          ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
           ctx.beginPath();
-          ctx.arc(rx, o.height * 0.3 + 1.8, 0.9, 0, Math.PI * 2);
-          ctx.arc(rx, o.height * 0.7 + 1.8, 0.9, 0, Math.PI * 2);
+          // Render projected shadow on the horizontal road surface below the bird
+          ctx.ellipse(o.width / 2, pHeight + 10, shadowW, shadowW * 0.25, 0, 0, Math.PI * 2);
           ctx.fill();
+          ctx.restore();
         }
+      }
 
-        // Wood planks outlines
-        ctx.strokeStyle = 'rgba(75, 42, 13, 0.45)';
-        ctx.lineWidth = 1.0;
-        ctx.beginPath();
-        ctx.moveTo(o.width * 0.32, 3); ctx.lineTo(o.width * 0.32, o.height - 3);
-        ctx.moveTo(o.width * 0.68, 3); ctx.lineTo(o.width * 0.68, o.height - 3);
-        ctx.stroke();
-      } 
-      else if (o.type === 'bird') {
-        // Pterodactyl style bird
-        ctx.fillStyle = '#b91c1c';
-        
-        const wingsUp = Math.sin(o.wingPhase) > 0;
-        
-        // Head / Amber Beak
-        ctx.fillRect(o.width * 0.65, 6, 12, 5);
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(o.width * 0.65 + 12, 8, 6, 3);
+      if (settings.enable3D) {
+        if (o.type === 'rock_small') {
+          // Volumetric Layer-Extruded 3D Boulder
+          const layerDepth = 5;
+          for (let d = layerDepth; d >= 0; d--) {
+            ctx.save();
+            ctx.translate(d * -0.8, d * 0.5);
+            
+            if (d > 0) {
+              ctx.fillStyle = '#374151'; // Solid dark grey back extrusion
+              ctx.beginPath();
+              ctx.moveTo(0, o.height);
+              ctx.lineTo(5, 10);
+              ctx.lineTo(15, 0);
+              ctx.lineTo(24, 7);
+              ctx.lineTo(o.width, o.height);
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              // Main foreground face
+              ctx.fillStyle = '#6b7280';
+              ctx.beginPath();
+              ctx.moveTo(0, o.height);
+              ctx.lineTo(5, 10);
+              ctx.lineTo(15, 0);
+              ctx.lineTo(24, 7);
+              ctx.lineTo(o.width, o.height);
+              ctx.closePath();
+              ctx.fill();
 
-        ctx.fillStyle = '#b91c1c';
-        // Primary Body
-        ctx.fillRect(o.width * 0.15, 6, o.width * 0.55, 10);
-        
-        // Feather Tail
-        ctx.beginPath();
-        ctx.moveTo(0, 11);
-        ctx.lineTo(o.width * 0.2, 5);
-        ctx.lineTo(o.width * 0.2, 17);
-        ctx.closePath();
-        ctx.fill();
+              // Faceted lighting overlay
+              ctx.fillStyle = '#9ca3af';
+              ctx.beginPath();
+              ctx.moveTo(5, 10);
+              ctx.lineTo(15, 0);
+              ctx.lineTo(13, o.height);
+              ctx.closePath();
+              ctx.fill();
 
-        // Dynamic flapping wings
-        if (wingsUp) {
+              // High-contrast fissure crack
+              ctx.strokeStyle = '#1f2937';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.moveTo(15, 0);
+              ctx.lineTo(13, o.height);
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+        } 
+        else if (o.type === 'rock_large') {
+          // Heavy Volumetric 3D Rock
+          const layerDepth = 8;
+          for (let d = layerDepth; d >= 0; d--) {
+            ctx.save();
+            ctx.translate(d * -0.8, d * 0.5);
+            
+            if (d > 0) {
+              ctx.fillStyle = '#1f2937'; // Solid back-extrusion shadow
+              ctx.beginPath();
+              ctx.moveTo(0, o.height);
+              ctx.lineTo(10, 20);
+              ctx.lineTo(26, 4);
+              ctx.lineTo(44, 15);
+              ctx.lineTo(52, 0);
+              ctx.lineTo(o.width, o.height);
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              // High fidelity face paint
+              ctx.fillStyle = '#4b5563';
+              ctx.beginPath();
+              ctx.moveTo(0, o.height);
+              ctx.lineTo(10, 20);
+              ctx.lineTo(26, 4);
+              ctx.lineTo(44, 15);
+              ctx.lineTo(52, 0);
+              ctx.lineTo(o.width, o.height);
+              ctx.closePath();
+              ctx.fill();
+
+              // Lighting facets
+              ctx.fillStyle = '#6b7280';
+              ctx.beginPath();
+              ctx.moveTo(10, 20);
+              ctx.lineTo(26, 4);
+              ctx.lineTo(26, o.height);
+              ctx.closePath();
+              ctx.fill();
+
+              ctx.strokeStyle = '#111827';
+              ctx.lineWidth = 2.0;
+              ctx.beginPath();
+              ctx.moveTo(26, 4);
+              ctx.lineTo(26, o.height);
+              ctx.moveTo(44, 15);
+              ctx.lineTo(40, o.height);
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+        } 
+        else if (o.type === 'stump') {
+          // Immersive 3D Cylinder Wood Stump
+          const r = o.width / 2 - 3;
+          const cyTop = 14;
+          const cyBot = o.height - 3;
+
+          // Bark cylinder trunk
+          const barkGrad = ctx.createLinearGradient(3, 0, o.width - 3, 0);
+          barkGrad.addColorStop(0, '#451a03'); // Left edge shadow
+          barkGrad.addColorStop(0.3, '#78350f'); // Classic deep brown
+          barkGrad.addColorStop(0.65, '#92400e'); // highlight
+          barkGrad.addColorStop(1, '#451a03'); // Right shadow
+          ctx.fillStyle = barkGrad;
+
           ctx.beginPath();
-          ctx.moveTo(o.width * 0.4, 6);
-          ctx.lineTo(o.width * 0.34, -13);
-          ctx.lineTo(o.width * 0.51, 6);
+          ctx.ellipse(o.width / 2, cyTop, r, 4, 0, 0, Math.PI, true); // back top arc
+          ctx.ellipse(o.width / 2, cyBot, r, 5, 0, Math.PI, false); // bottom curves
           ctx.closePath();
           ctx.fill();
-        } else {
+
+          // Trunk rectangular filling block
+          ctx.fillRect(o.width / 2 - r, cyTop, r * 2, cyBot - cyTop);
+
+          // Wood roots base
+          ctx.fillStyle = '#451a03';
           ctx.beginPath();
-          ctx.moveTo(o.width * 0.4, 14);
-          ctx.lineTo(o.width * 0.29, 29);
-          ctx.lineTo(o.width * 0.51, 14);
+          ctx.moveTo(3, cyBot);
+          ctx.lineTo(0, o.height);
+          ctx.lineTo(9, o.height);
           ctx.closePath();
           ctx.fill();
+
+          ctx.beginPath();
+          ctx.moveTo(o.width - 3, cyBot);
+          ctx.lineTo(o.width, o.height);
+          ctx.lineTo(o.width - 9, o.height);
+          ctx.closePath();
+          ctx.fill();
+
+          // 3D Top Ring Face
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.ellipse(o.width / 2, cyTop, r, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Growth rings inside top face
+          ctx.strokeStyle = '#d97706';
+          ctx.lineWidth = 1.0;
+          ctx.beginPath();
+          ctx.ellipse(o.width / 2, cyTop, r * 0.6, 2.4, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(o.width / 2, cyTop, r * 0.3, 1.2, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        } 
+        else if (o.type === 'barrel') {
+          // Immersive 3D Bulging Wooden Barrel with gold metallic hoops
+          const rTop = o.width / 2 - 4;
+          const cyTop = 6;
+          const cyBot = o.height - 4;
+
+          const barrelGrad = ctx.createLinearGradient(0, 0, o.width, 0);
+          barrelGrad.addColorStop(0, '#451a03'); // Dark left shadow
+          barrelGrad.addColorStop(0.3, '#78350f'); // Warm barrel brown
+          barrelGrad.addColorStop(0.65, '#b45309'); // Wood highlight
+          barrelGrad.addColorStop(1, '#451a03'); // Right shadow
+          ctx.fillStyle = barrelGrad;
+
+          // Draw bulging 3D curves outline using Quadratic Bezier curves
+          ctx.beginPath();
+          ctx.moveTo(4, cyTop);
+          ctx.quadraticCurveTo(-2, o.height/2, 4, cyBot);
+          ctx.lineTo(o.width - 4, cyBot);
+          ctx.quadraticCurveTo(o.width + 2, o.height/2, o.width - 4, cyTop);
+          ctx.closePath();
+          ctx.fill();
+
+          // Planks separations
+          ctx.strokeStyle = 'rgba(69, 26, 3, 0.45)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(o.width * 0.33, cyTop);
+          ctx.quadraticCurveTo(o.width * 0.25, o.height/2, o.width * 0.33, cyBot);
+          ctx.moveTo(o.width * 0.67, cyTop);
+          ctx.quadraticCurveTo(o.width * 0.75, o.height/2, o.width * 0.67, cyBot);
+          ctx.stroke();
+
+          // Metallic strap bands hugging the bulging body
+          ctx.strokeStyle = '#9ca3af';
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.moveTo(1.5, o.height * 0.3);
+          ctx.quadraticCurveTo(o.width / 2, o.height * 0.3 + 3, o.width - 1.5, o.height * 0.3);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(1.5, o.height * 0.7);
+          ctx.quadraticCurveTo(o.width / 2, o.height * 0.7 + 3, o.width - 1.5, o.height * 0.7);
+          ctx.stroke();
+
+          // Rivet studs
+          ctx.fillStyle = '#4b5563';
+          const ry1 = o.height * 0.3 + 1.8;
+          const ry2 = o.height * 0.7 + 1.8;
+          ctx.beginPath();
+          ctx.arc(o.width * 0.25, ry1, 1.0, 0, Math.PI * 2);
+          ctx.arc(o.width * 0.5, ry1 + 1.2, 1.0, 0, Math.PI * 2);
+          ctx.arc(o.width * 0.75, ry1, 1.0, 0, Math.PI * 2);
+          ctx.arc(o.width * 0.25, ry2, 1.0, 0, Math.PI * 2);
+          ctx.arc(o.width * 0.5, ry2 + 1.2, 1.0, 0, Math.PI * 2);
+          ctx.arc(o.width * 0.75, ry2, 1.0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 3D Top face lid
+          ctx.fillStyle = '#92400e';
+          ctx.beginPath();
+          ctx.ellipse(o.width / 2, cyTop, rTop, 3.2, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#451a03'; // core hollow texture
+          ctx.beginPath();
+          ctx.ellipse(o.width / 2, cyTop, rTop * 0.75, 2.0, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } 
+        else if (o.type === 'bird') {
+          // Flying Pterodactyl with dynamic wing 3D extrusion depth
+          const layerDepth = 4;
+          for (let d = layerDepth; d >= 0; d--) {
+            ctx.save();
+            ctx.translate(d * -0.7, d * 0.4);
+
+            const wingsUp = Math.sin(o.wingPhase) > 0;
+            const bodyColor = d > 0 ? '#7f1d1d' : '#b91c1c';
+            const beakColor = d > 0 ? '#d97706' : '#fbbf24';
+
+            ctx.fillStyle = bodyColor;
+            // Amber Beak/Head in depth layers
+            ctx.fillRect(o.width * 0.65, 6, 12, 5);
+            ctx.fillStyle = beakColor;
+            ctx.fillRect(o.width * 0.65 + 12, 8, 6, 3);
+
+            ctx.fillStyle = bodyColor;
+            // Primary Body
+            ctx.fillRect(o.width * 0.15, 6, o.width * 0.55, 10);
+            
+            // Feather Tail
+            ctx.beginPath();
+            ctx.moveTo(0, 11);
+            ctx.lineTo(o.width * 0.2, 5);
+            ctx.lineTo(o.width * 0.2, 17);
+            ctx.closePath();
+            ctx.fill();
+
+            // Slashed body wing flap
+            if (wingsUp) {
+              ctx.beginPath();
+              ctx.moveTo(o.width * 0.4, 6);
+              ctx.lineTo(o.width * 0.34, -13);
+              ctx.lineTo(o.width * 0.51, 6);
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              ctx.beginPath();
+              ctx.moveTo(o.width * 0.4, 14);
+              ctx.lineTo(o.width * 0.29, 29);
+              ctx.lineTo(o.width * 0.51, 14);
+              ctx.closePath();
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+        } 
+        else if (o.type === 'robot_bird') {
+          // Cyber floating battle drone with extruded 3D hull
+          const layerDepth = 4;
+          for (let d = layerDepth; d >= 0; d--) {
+            ctx.save();
+            ctx.translate(d * -0.7, d * 0.4);
+
+            const bodyColor = d > 0 ? '#1e293b' : '#475569';
+            const decalColor = d > 0 ? '#0891b2' : '#06b6d4';
+            const laserColor = d > 0 ? '#991b1b' : '#ef4444';
+
+            ctx.fillStyle = bodyColor;
+            ctx.fillRect(5, 5, o.width - 10, o.height - 10);
+
+            // Tech indicators
+            ctx.fillStyle = decalColor;
+            ctx.fillRect(9, 8, 4, 2);
+            ctx.fillRect(16, 14, 5, 2);
+
+            //visor
+            ctx.fillStyle = laserColor;
+            ctx.fillRect(o.width - 15, 9, 10, 4.5);
+
+            // Turbine offset
+            const turbOffset = Math.sin(o.wingPhase * 1.5) * 6;
+            ctx.fillStyle = d > 0 ? '#0284c7' : '#38bdf8';
+            ctx.fillRect(0, 12 + turbOffset/2, 4, 8 - (turbOffset ? 2 : 0));
+
+            // Thrust bloom (top overlay only)
+            if (d === 0) {
+              const thrustGrad = ctx.createLinearGradient(-15, 16, 0, 16);
+              thrustGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+              thrustGrad.addColorStop(0.6, 'rgba(6, 182, 212, 0.7)');
+              thrustGrad.addColorStop(1, '#22d3ee');
+              ctx.fillStyle = thrustGrad;
+              ctx.beginPath();
+              ctx.ellipse(-7, 16, 8, 2.8, 0, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
         }
-      } 
-      else if (o.type === 'robot_bird') {
-        // Futuristic floating sentry/hunter drone
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(5, 5, o.width - 10, o.height - 10);
+      } else {
+        // Classic 2D Obstacle Renderer Fallback
+        if (o.type === 'rock_small') {
+          ctx.fillStyle = '#6b7280';
+          ctx.beginPath();
+          ctx.moveTo(0, o.height);
+          ctx.lineTo(5, 10);
+          ctx.lineTo(15, 0);
+          ctx.lineTo(24, 7);
+          ctx.lineTo(o.width, o.height);
+          ctx.closePath();
+          ctx.fill();
 
-        // Cyber blue circuit decals on body
-        ctx.fillStyle = '#06b6d4';
-        ctx.fillRect(9, 8, 4, 2);
-        ctx.fillRect(16, 14, 5, 2);
+          ctx.fillStyle = '#9ca3af';
+          ctx.beginPath();
+          ctx.moveTo(5, 10);
+          ctx.lineTo(15, 0);
+          ctx.lineTo(13, o.height);
+          ctx.closePath();
+          ctx.fill();
 
-        // Glowing targeting ruby visor
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(o.width - 15, 9, 10, 4.5);
+          ctx.strokeStyle = '#374151';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(15, 0);
+          ctx.lineTo(13, o.height);
+          ctx.stroke();
+        } 
+        else if (o.type === 'rock_large') {
+          ctx.fillStyle = '#4b5563';
+          ctx.beginPath();
+          ctx.moveTo(0, o.height);
+          ctx.lineTo(10, 20);
+          ctx.lineTo(26, 4);
+          ctx.lineTo(44, 15);
+          ctx.lineTo(52, 0);
+          ctx.lineTo(o.width, o.height);
+          ctx.closePath();
+          ctx.fill();
 
-        // Rotating exhaust fan
-        const turbOffset = Math.sin(o.wingPhase * 1.5) * 6;
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(0, 12 + turbOffset/2, 4, 8 - (turbOffset ? 2 : 0));
+          ctx.fillStyle = '#6b7280';
+          ctx.beginPath();
+          ctx.moveTo(10, 20);
+          ctx.lineTo(26, 4);
+          ctx.lineTo(26, o.height);
+          ctx.closePath();
+          ctx.fill();
 
-        // Ion thrust propulsion bloom
-        const thrustGrad = ctx.createLinearGradient(-15, 16, 0, 16);
-        thrustGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
-        thrustGrad.addColorStop(0.6, 'rgba(6, 182, 212, 0.7)');
-        thrustGrad.addColorStop(1, '#22d3ee');
-        ctx.fillStyle = thrustGrad;
-        ctx.beginPath();
-        ctx.ellipse(-7, 16, 8, 2.8, 0, 0, Math.PI * 2);
-        ctx.fill();
+          ctx.strokeStyle = '#1f2937';
+          ctx.lineWidth = 2.0;
+          ctx.beginPath();
+          ctx.moveTo(26, 4);
+          ctx.lineTo(26, o.height);
+          ctx.moveTo(44, 15);
+          ctx.lineTo(40, o.height);
+          ctx.stroke();
+        } 
+        else if (o.type === 'stump') {
+          ctx.fillStyle = '#78350f';
+          ctx.fillRect(5, 10, o.width - 10, o.height - 10);
+          
+          ctx.beginPath();
+          ctx.moveTo(0, o.height);
+          ctx.lineTo(5, 10);
+          ctx.lineTo(o.width - 5, 10);
+          ctx.lineTo(o.width, o.height);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.ellipse(o.width / 2, 10, o.width / 2.5, 3.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#d97706';
+          ctx.beginPath();
+          ctx.ellipse(o.width / 2, 10, o.width / 4, 1.8, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.fillStyle = '#451a03';
+          ctx.fillRect(o.width * 0.3, 19, 4, 4);
+          ctx.fillRect(o.width * 0.65, 27, 3, 3);
+        } 
+        else if (o.type === 'barrel') {
+          ctx.fillStyle = '#b45309';
+          ctx.fillRect(2, 2, o.width - 4, o.height - 4);
+          
+          ctx.fillStyle = '#92400e';
+          ctx.fillRect(0, 0, o.width, 3);
+          ctx.fillRect(0, o.height - 3, o.width, 3);
+
+          ctx.fillStyle = '#9ca3af';
+          ctx.fillRect(0, o.height * 0.3, o.width, 3.5);
+          ctx.fillRect(0, o.height * 0.7, o.width, 3.5);
+
+          ctx.fillStyle = '#4b5563';
+          for (let rx = 3; rx < o.width; rx += 9) {
+            ctx.beginPath();
+            ctx.arc(rx, o.height * 0.3 + 1.8, 0.9, 0, Math.PI * 2);
+            ctx.arc(rx, o.height * 0.7 + 1.8, 0.9, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          ctx.strokeStyle = 'rgba(75, 42, 13, 0.45)';
+          ctx.lineWidth = 1.0;
+          ctx.beginPath();
+          ctx.moveTo(o.width * 0.32, 3); ctx.lineTo(o.width * 0.32, o.height - 3);
+          ctx.moveTo(o.width * 0.68, 3); ctx.lineTo(o.width * 0.68, o.height - 3);
+          ctx.stroke();
+        } 
+        else if (o.type === 'bird') {
+          ctx.fillStyle = '#b91c1c';
+          const wingsUp = Math.sin(o.wingPhase) > 0;
+          
+          ctx.fillRect(o.width * 0.65, 6, 12, 5);
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillRect(o.width * 0.65 + 12, 8, 6, 3);
+
+          ctx.fillStyle = '#b91c1c';
+          ctx.fillRect(o.width * 0.15, 6, o.width * 0.55, 10);
+          
+          ctx.beginPath();
+          ctx.moveTo(0, 11);
+          ctx.lineTo(o.width * 0.2, 5);
+          ctx.lineTo(o.width * 0.2, 17);
+          ctx.closePath();
+          ctx.fill();
+
+          if (wingsUp) {
+            ctx.beginPath();
+            ctx.moveTo(o.width * 0.4, 6);
+            ctx.lineTo(o.width * 0.34, -13);
+            ctx.lineTo(o.width * 0.51, 6);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            ctx.beginPath();
+            ctx.moveTo(o.width * 0.4, 14);
+            ctx.lineTo(o.width * 0.29, 29);
+            ctx.lineTo(o.width * 0.51, 14);
+            ctx.closePath();
+            ctx.fill();
+          }
+        } 
+        else if (o.type === 'robot_bird') {
+          ctx.fillStyle = '#475569';
+          ctx.fillRect(5, 5, o.width - 10, o.height - 10);
+
+          ctx.fillStyle = '#06b6d4';
+          ctx.fillRect(9, 8, 4, 2);
+          ctx.fillRect(16, 14, 5, 2);
+
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(o.width - 15, 9, 10, 4.5);
+
+          const turbOffset = Math.sin(o.wingPhase * 1.5) * 6;
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(0, 12 + turbOffset/2, 4, 8 - (turbOffset ? 2 : 0));
+
+          const thrustGrad = ctx.createLinearGradient(-15, 16, 0, 16);
+          thrustGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+          thrustGrad.addColorStop(0.6, 'rgba(6, 182, 212, 0.7)');
+          thrustGrad.addColorStop(1, '#22d3ee');
+          ctx.fillStyle = thrustGrad;
+          ctx.beginPath();
+          ctx.ellipse(-7, 16, 8, 2.8, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       ctx.restore();
@@ -1892,258 +2318,305 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
     // 9. Draw Player character (High-Fidelity Procedural Pixel Renderer)
     const c = engine.selectedCharacter;
-    ctx.save();
     
     // Apply squish factor from landing or ducking scale
     const drawHeight = engine.playerHeight - engine.landingSquish;
     const drawY = engine.playerY + engine.landingSquish;
 
-    ctx.translate(engine.playerX, drawY);
-
-    if (engine.isDead) {
-      // Rotation spinning death
-      ctx.translate(engine.playerWidth / 2, drawHeight / 2);
-      ctx.rotate(engine.time * 0.15);
-      ctx.translate(-engine.playerWidth / 2, -drawHeight / 2);
+    // Real-Time 3D projected drop shadow on the ground floor below character feet
+    if (settings.enable3D) {
+      ctx.save();
+      const bounceDist = (GROUND_Y - drawY) - drawHeight;
+      const shadowW = Math.max(10, (engine.playerWidth * 0.72) * (1 - bounceDist / 130));
+      const shadowAlpha = Math.max(0.05, 0.45 * (1 - bounceDist / 110));
+      ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+      ctx.beginPath();
+      // Render soft shadow exactly at real-time ground level
+      ctx.ellipse(engine.playerX + engine.playerWidth / 2 + 4, GROUND_Y + 6, shadowW, shadowW * 0.25, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
-    if (c.runnerType === 'dino') {
-      // Draw Classic Dino stylized Rex with gorgeous scale highlights and spikes
-      ctx.fillStyle = c.color;
-      
-      // Main Body Torso
-      ctx.fillRect(10, 12, 28, 22);
+    // Set character extrusion depth to always display a beautiful 3D volume (7 layers for Ultra 3D, 2 layers for 2.5D fallback)
+    const extrusionDepth = settings.enable3D ? 7 : 2;
 
-      // Spine Spikes (Very Dino!)
-      ctx.fillStyle = c.accentColor; // spike colors
-      ctx.beginPath();
-      ctx.moveTo(10, 12); ctx.lineTo(13, 8); ctx.lineTo(16, 12);
-      ctx.moveTo(18, 12); ctx.lineTo(21, 8); ctx.lineTo(24, 12);
-      ctx.moveTo(6, 18);  ctx.lineTo(8, 14); ctx.lineTo(11, 18);
-      ctx.fill();
+    for (let d = extrusionDepth; d >= 0; d--) {
+      ctx.save();
 
-      ctx.fillStyle = c.color;
-      // Tail trailing
-      ctx.fillRect(0, 18, 10, 12);
-      ctx.fillRect(2, 30, 4, 4);
+      // Swift hex darkening helper for rendering volumetric retro-voxel 3D sides
+      const getExtrudedColor = (col: string, depth: number) => {
+        const cleanHex = col.replace('#', '');
+        if (cleanHex.length !== 6) return col;
+        let r = parseInt(cleanHex.substring(0, 2), 16);
+        let g = parseInt(cleanHex.substring(2, 4), 16);
+        let b = parseInt(cleanHex.substring(4, 6), 16);
+        const factor = Math.max(0.12, 0.55 - depth * 0.08);
+        return `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
+      };
 
-      // T-Rex snout head (with custom highlighted brow ridge)
-      ctx.fillRect(22, 0, 24, 14);
-      // Highlight on crown of head
-      ctx.fillStyle = '#86efac'; // soft bright green highlight
-      ctx.fillRect(24, 0, 18, 3);
+      const getTone = (col: string) => {
+        if (!settings.enable3D || d === 0) return col;
+        return getExtrudedColor(col, d);
+      };
 
-      ctx.fillStyle = c.color;
-      // Cheek/neck hook
-      ctx.fillRect(30, 14, 8, 6);
+      // Set current volume shades
+      const charColor = getTone(c.color);
+      const charAccent = getTone(c.accentColor);
 
-      // Green Dino eye/Snout
-      ctx.fillStyle = '#000000';
+      // Skew and translation matrix shift for voxel-layered volume sides
+      if (settings.enable3D && d > 0) {
+        ctx.translate(d * -0.75, d * 0.5);
+      }
+
+      ctx.translate(engine.playerX, drawY);
+
       if (engine.isDead) {
-        // Draw cross lines for dead eye
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1.5;
+        // Rotation spinning death
+        ctx.translate(engine.playerWidth / 2, drawHeight / 2);
+        ctx.rotate(engine.time * 0.15);
+        ctx.translate(-engine.playerWidth / 2, -drawHeight / 2);
+      }
+
+      if (c.runnerType === 'dino') {
+        // Draw Classic Dino stylized Rex with scale highlights and spikes
+        ctx.fillStyle = charColor;
+        
+        // Main Body Torso
+        ctx.fillRect(10, 12, 28, 22);
+
+        // Spine Spikes (Very Dino!)
+        ctx.fillStyle = charAccent; // spike colors
         ctx.beginPath();
-        ctx.moveTo(34, 4); ctx.lineTo(38, 8);
-        ctx.moveTo(38, 4); ctx.lineTo(34, 8);
-        ctx.stroke();
-      } else {
-        // Blinking eye calculation
-        const isBlinking = Math.floor(engine.time) % 15 === 0 && (engine.time % 1) < 0.2;
-        if (!isBlinking) {
-          ctx.fillRect(36, 4, 3.5, 3.5); // Cute eye
-          // White pupil dot
+        ctx.moveTo(10, 12); ctx.lineTo(13, 8); ctx.lineTo(16, 12);
+        ctx.moveTo(18, 12); ctx.lineTo(21, 8); ctx.lineTo(24, 12);
+        ctx.moveTo(6, 18);  ctx.lineTo(8, 14); ctx.lineTo(11, 18);
+        ctx.fill();
+
+        ctx.fillStyle = charColor;
+        // Tail trailing
+        ctx.fillRect(0, 18, 10, 12);
+        ctx.fillRect(2, 30, 4, 4);
+
+        // T-Rex snout head (with custom highlighted brow ridge)
+        ctx.fillRect(22, 0, 24, 14);
+        // Highlight on crown of head
+        ctx.fillStyle = getTone('#86efac'); // soft bright green highlight
+        ctx.fillRect(24, 0, 18, 3);
+
+        ctx.fillStyle = charColor;
+        // Cheek/neck hook
+        ctx.fillRect(30, 14, 8, 6);
+
+        // Green Dino eye/Snout
+        ctx.fillStyle = getTone('#000000');
+        if (engine.isDead) {
+          // Draw cross lines for dead eye
+          ctx.strokeStyle = getTone('#000000');
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(34, 4); ctx.lineTo(38, 8);
+          ctx.moveTo(38, 4); ctx.lineTo(34, 8);
+          ctx.stroke();
+        } else {
+          // Blinking eye calculation
+          const isBlinking = Math.floor(engine.time) % 15 === 0 && (engine.time % 1) < 0.2;
+          if (!isBlinking) {
+            ctx.fillRect(36, 4, 3.5, 3.5); // Cute eye
+            // White pupil dot
+            ctx.fillStyle = getTone('#ffffff');
+            ctx.fillRect(37, 4.5, 1.2, 1.2);
+          }
+        }
+
+        // Small dinosaur hands
+        ctx.fillStyle = charAccent;
+        ctx.fillRect(36, 18, 6, 2.5);
+
+        // Dino running legs
+        ctx.fillStyle = charColor;
+        const stepLeft = Math.sin(engine.legPhase) > 0;
+        
+        if (engine.isJumping || engine.isDead) {
+          // Leg tucked together
+          ctx.fillRect(14, 34, 6, 12);
+          ctx.fillRect(26, 34, 6, 12);
+        } else {
+          // Walking cycle
+          if (stepLeft) {
+            ctx.fillRect(12, 34, 5, 14); // Left leg forward
+            ctx.fillRect(28, 34, 5, 8);  // Right leg retracted
+          } else {
+            ctx.fillRect(12, 34, 5, 8);  // Left leg retracted
+            ctx.fillRect(28, 34, 5, 14); // Right leg forward
+          }
+        }
+      } 
+      else if (c.runnerType === 'robot') {
+        // Cyber cybernetic metal running droid with high tech visuals
+        ctx.fillStyle = charColor;
+        
+        // Metal torso body with side exhaust port lines
+        ctx.fillRect(8, 10, 32, 24);
+
+        // Torso core plating grid lines
+        ctx.fillStyle = getTone('#334155');
+        ctx.fillRect(12, 14, 4, 16);
+        ctx.fillRect(32, 14, 4, 16);
+        
+        // Arm/Joint
+        ctx.fillStyle = charAccent;
+        ctx.fillRect(18, 14, 8, 14);
+
+        // Metallic Cyber Head
+        ctx.fillStyle = charColor;
+        ctx.fillRect(17, 0, 16, 10);
+        
+        // Glowing cycling visor with visual shine strip
+        ctx.fillStyle = getTone('#22d3ee'); // bright cyan glow
+        ctx.fillRect(25, 3, 8, 3);
+        if (!settings.reduceMotion) {
+          const sweep = Math.abs(Math.sin(engine.time * 0.1)) * 6;
+          ctx.fillStyle = getTone('#ffffff');
+          ctx.fillRect(25 + sweep, 3, 2, 3);
+        }
+
+        // Jetpack back nozzle
+        ctx.fillStyle = getTone('#475569');
+        ctx.fillRect(4, 18, 4, 10);
+        
+        // blue booster sparks when jumping
+        if (engine.isJumping) {
+          ctx.fillStyle = getTone('#06b6d4');
+          ctx.fillRect(2, 28, 6, 12);
+        }
+
+        // Running metal legs
+        ctx.fillStyle = charAccent;
+        const stepLeft = Math.sin(engine.legPhase) > 0;
+        if (engine.isJumping) {
+          ctx.fillRect(12, 34, 6, 8);
+          ctx.fillRect(22, 34, 6, 8);
+        } else {
+          if (stepLeft) {
+            ctx.fillRect(10, 34, 5, 15);
+            ctx.fillRect(25, 34, 5, 10);
+          } else {
+            ctx.fillRect(10, 34, 5, 10);
+            ctx.fillRect(25, 34, 5, 15);
+          }
+        }
+      } 
+      else if (c.runnerType === 'fox') {
+        // Little running crimson fox with bushy tail and soft updates
+        const breath = Math.sin(engine.time * 0.18) * 1.5;
+        ctx.fillStyle = charColor;
+
+        // Torso body with breathing effect
+        ctx.fillRect(8, 12, 30, 20 + breath * 0.35);
+
+        // Big bushy tail
+        ctx.fillStyle = charAccent; // tail tip usually white/amber
+        ctx.fillRect(0, 16 + breath * 0.2, 8, 12);
+        ctx.fillStyle = charColor;
+        ctx.fillRect(2, 20 + breath * 0.2, 6, 10);
+
+        // Fox triangular head
+        ctx.fillRect(24, 2, 16, 12);
+        // Erect triangle ears with obsidian tips
+        ctx.beginPath();
+        ctx.moveTo(26, 2); ctx.lineTo(26, -6); ctx.lineTo(31, 2);
+        ctx.moveTo(34, 2); ctx.lineTo(38, -6); ctx.lineTo(39, 2);
+        ctx.fill();
+
+        // Ear tips in Dark Charcoal
+        ctx.fillStyle = getTone('#1e293b');
+        ctx.beginPath();
+        ctx.moveTo(26, -2); ctx.lineTo(26, -6); ctx.lineTo(28, -2);
+        ctx.moveTo(36, -2); ctx.lineTo(38, -6); ctx.lineTo(39, -2);
+        ctx.fill();
+
+        // White cheek patches
+        ctx.fillStyle = getTone('#ffffff');
+        ctx.fillRect(32, 8, 8, 4);
+
+        // Cute intelligent fox eye
+        ctx.fillStyle = getTone('#1e293b');
+        ctx.fillRect(30, 5, 2.5, 2.5);
+
+        // Four paws walking stride
+        ctx.fillStyle = charColor;
+        const phase = engine.legPhase;
+        const legOffsetL = Math.sin(phase) * 10;
+        const legOffsetR = Math.sin(phase + Math.PI) * 10;
+
+        if (engine.isJumping) {
+          ctx.fillRect(12, 32, 5, 8);
+          ctx.fillRect(26, 32, 5, 8);
+        } else {
+          // Left legs
+          ctx.fillRect(12 + Math.max(0, legOffsetL), 32, 5, 12);
+          // Right legs
+          ctx.fillRect(24 + Math.max(0, legOffsetR), 32, 5, 12);
+        }
+      } 
+      else if (c.runnerType === 'sphere') {
+        // Glowing High-tech energy orb (radial highlights render on top cover only to prevent dark layer blending)
+        if (d === 0) {
+          const rad = 23;
+          const cx = engine.playerWidth / 2;
+          const cy = drawHeight / 2;
+          
+          // Calculate stretch proportions based on velocity
+          const squishRatio = engine.isJumping ? Math.max(0.7, 1 + engine.playerVY * 0.02) : engine.isDucking ? 0.6 : 1.0;
+          const stretchW = rad * (2 - squishRatio);
+          const stretchH = rad * squishRatio;
+
+          ctx.save();
+          if (!settings.reduceMotion && !isMobile) {
+            ctx.shadowBlur = 24;
+            ctx.shadowColor = c.color;
+          }
+
+          // Outer Glowing Orb Base Shell
+          const orbGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, stretchW);
+          orbGrad.addColorStop(0, '#ffffff');
+          orbGrad.addColorStop(0.35, c.color);
+          orbGrad.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
+          ctx.fillStyle = orbGrad;
+
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, stretchW, stretchH, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          // Rotating inner technological core
+          ctx.strokeStyle = c.accentColor;
+          ctx.lineWidth = 2.5;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(engine.time * 0.08);
+
+          // Orbit Ring 1
+          ctx.beginPath();
+          ctx.ellipse(0, 0, stretchW * 0.65, stretchH * 0.25, Math.PI / 4, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Orbit Ring 2
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.0;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, stretchW * 0.45, stretchH * 0.15, -Math.PI / 4, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Core white shining gem reactor
           ctx.fillStyle = '#ffffff';
-          ctx.fillRect(37, 4.5, 1.2, 1.2);
+          ctx.fillRect(-3, -3, 6, 6);
+          ctx.restore();
         }
       }
 
-      // Small dinosaur hands
-      ctx.fillStyle = c.accentColor;
-      ctx.fillRect(36, 18, 6, 2.5);
-
-      // Dino running legs
-      ctx.fillStyle = c.color;
-      const stepLeft = Math.sin(engine.legPhase) > 0;
-      
-      if (engine.isJumping || engine.isDead) {
-        // Leg tucked together
-        ctx.fillRect(14, 34, 6, 12);
-        ctx.fillRect(26, 34, 6, 12);
-      } else {
-        // Walking cycle
-        if (stepLeft) {
-          ctx.fillRect(12, 34, 5, 14); // Left leg forward
-          ctx.fillRect(28, 34, 5, 8);  // Right leg retracted
-        } else {
-          ctx.fillRect(12, 34, 5, 8);  // Left leg retracted
-          ctx.fillRect(28, 34, 5, 14); // Right leg forward
-        }
-      }
-    } 
-    else if (c.runnerType === 'robot') {
-      // Cyber cybernetic metal running droid with high tech visuals
-      ctx.fillStyle = c.color;
-      
-      // Metal torso body with side exhaust port lines
-      ctx.fillRect(8, 10, 32, 24);
-
-      // Torso core plating grid lines
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(12, 14, 4, 16);
-      ctx.fillRect(32, 14, 4, 16);
-      
-      // Arm/Joint
-      ctx.fillStyle = c.accentColor;
-      ctx.fillRect(18, 14, 8, 14);
-
-      // Metallic Cyber Head
-      ctx.fillStyle = c.color;
-      ctx.fillRect(17, 0, 16, 10);
-      
-      // Glowing cycling visor with visual shine strip
-      ctx.fillStyle = '#22d3ee'; // bright cyan glow
-      ctx.fillRect(25, 3, 8, 3);
-      if (!settings.reduceMotion) {
-        const sweep = Math.abs(Math.sin(engine.time * 0.1)) * 6;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(25 + sweep, 3, 2, 3);
-      }
-
-      // Jetpack back nozzle
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(4, 18, 4, 10);
-      
-      // blue booster sparks when jumping
-      if (engine.isJumping) {
-        ctx.fillStyle = '#06b6d4';
-        ctx.fillRect(2, 28, 6, 12);
-      }
-
-      // Running metal legs
-      ctx.fillStyle = c.accentColor;
-      const stepLeft = Math.sin(engine.legPhase) > 0;
-      if (engine.isJumping) {
-        ctx.fillRect(12, 34, 6, 8);
-        ctx.fillRect(22, 34, 6, 8);
-      } else {
-        if (stepLeft) {
-          ctx.fillRect(10, 34, 5, 15);
-          ctx.fillRect(25, 34, 5, 10);
-        } else {
-          ctx.fillRect(10, 34, 5, 10);
-          ctx.fillRect(25, 34, 5, 15);
-        }
-      }
-    } 
-    else if (c.runnerType === 'fox') {
-      // Little running crimson fox with bushy tail and soft updates
-      const breath = Math.sin(engine.time * 0.18) * 1.5;
-      ctx.fillStyle = c.color;
-
-      // Torso body with breathing effect
-      ctx.fillRect(8, 12, 30, 20 + breath * 0.35);
-
-      // Big bushy tail
-      ctx.fillStyle = c.accentColor; // tail tip usually white/amber
-      ctx.fillRect(0, 16 + breath * 0.2, 8, 12);
-      ctx.fillStyle = c.color;
-      ctx.fillRect(2, 20 + breath * 0.2, 6, 10);
-
-      // Fox triangular head
-      ctx.fillRect(24, 2, 16, 12);
-      // Erect triangle ears with obsidian tips
-      ctx.beginPath();
-      ctx.moveTo(26, 2); ctx.lineTo(26, -6); ctx.lineTo(31, 2);
-      ctx.moveTo(34, 2); ctx.lineTo(38, -6); ctx.lineTo(39, 2);
-      ctx.fill();
-
-      // Ear tips in Dark Charcoal
-      ctx.fillStyle = '#1e293b';
-      ctx.beginPath();
-      ctx.moveTo(26, -2); ctx.lineTo(26, -6); ctx.lineTo(28, -2);
-      ctx.moveTo(36, -2); ctx.lineTo(38, -6); ctx.lineTo(39, -2);
-      ctx.fill();
-
-      // White cheek patches
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(32, 8, 8, 4);
-
-      // Cute intelligent fox eye
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(30, 5, 2.5, 2.5);
-
-      // Four paws walking stride
-      ctx.fillStyle = c.color;
-      const phase = engine.legPhase;
-      const legOffsetL = Math.sin(phase) * 10;
-      const legOffsetR = Math.sin(phase + Math.PI) * 10;
-
-      if (engine.isJumping) {
-        ctx.fillRect(12, 32, 5, 8);
-        ctx.fillRect(26, 32, 5, 8);
-      } else {
-        // Left legs
-        ctx.fillRect(12 + Math.max(0, legOffsetL), 32, 5, 12);
-        // Right legs
-        ctx.fillRect(24 + Math.max(0, legOffsetR), 32, 5, 12);
-      }
-    } 
-    else if (c.runnerType === 'sphere') {
-      // Glowing High-tech energy orb (squashes and stretches dynamically with multiple orbit components)
-      const rad = 23;
-      const cx = engine.playerWidth / 2;
-      const cy = drawHeight / 2;
-      
-      // Calculate stretch proportions based on velocity
-      const squishRatio = engine.isJumping ? Math.max(0.7, 1 + engine.playerVY * 0.02) : engine.isDucking ? 0.6 : 1.0;
-      const stretchW = rad * (2 - squishRatio);
-      const stretchH = rad * squishRatio;
-
-      ctx.save();
-      if (!settings.reduceMotion && !isMobile) {
-        ctx.shadowBlur = 24;
-        ctx.shadowColor = c.color;
-      }
-
-      // Outer Glowing Orb Base Shell
-      const orbGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, stretchW);
-      orbGrad.addColorStop(0, '#ffffff');
-      orbGrad.addColorStop(0.35, c.color);
-      orbGrad.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
-      ctx.fillStyle = orbGrad;
-
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, stretchW, stretchH, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Rotating inner technological core
-      ctx.strokeStyle = c.accentColor;
-      ctx.lineWidth = 2.5;
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(engine.time * 0.08);
-
-      // Orbit Ring 1
-      ctx.beginPath();
-      ctx.ellipse(0, 0, stretchW * 0.65, stretchH * 0.25, Math.PI / 4, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Orbit Ring 2
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.0;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, stretchW * 0.45, stretchH * 0.15, -Math.PI / 4, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Core white shining gem reactor
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(-3, -3, 6, 6);
       ctx.restore();
     }
-
-    ctx.restore();
 
     // 10. Draw custom background shadow particles (Silhouette style trails)
     engine.particles.forEach(p => {

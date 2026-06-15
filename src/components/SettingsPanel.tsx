@@ -155,13 +155,27 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </p>
         </div>
 
-        {/* Accessible parameters */}
+        {/* Visually Rich Graphics & 3D Parameters */}
         <div className="glass-panel bg-white/2 border-white/5 p-4 rounded-xl">
           <h2 className="text-xs font-black uppercase tracking-widest text-[#00f2ff] mb-4 flex items-center gap-2">
-            <Eye size={16} /> ACCESSIBILITY MODES
+            <Eye size={16} /> VISUAL ENGINE &amp; VIEWPORTS
           </h2>
 
           <div className="flex flex-col sm:flex-row gap-4">
+            {/* Ultra 3D Projection Engine Toggle */}
+            <label className="flex-1 flex items-center justify-between p-3 glass-panel bg-white/1.5 border-white/10 rounded-lg cursor-pointer hover:border-[#00f2ff]/40 select-none transition">
+              <div>
+                <span className="block text-sm font-semibold text-[#00f2ff] text-shadow-[0_0_10px_rgba(0,242,255,0.2)]">Ultra 3D Camera</span>
+                <span className="block text-[10px] text-slate-300 font-mono font-medium uppercase tracking-wider">3D Depth &amp; Perspective active</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.enable3D}
+                onChange={() => toggleOption('enable3D')}
+                className="accent-cyan-400 h-4 w-4 rounded cursor-pointer"
+              />
+            </label>
+
             {/* Reduce Motion */}
             <label className="flex-1 flex items-center justify-between p-3 glass-panel bg-white/1 border-white/5 rounded-lg cursor-pointer hover:border-[#00f2ff]/30 select-none transition">
               <div>
@@ -175,12 +189,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 className="accent-cyan-400 h-4 w-4 rounded cursor-pointer"
               />
             </label>
+          </div>
 
-            {/* Contrast Preset Mode */}
-            <label className="flex-1 flex items-center justify-between p-3 glass-panel bg-white/1 border-white/5 rounded-lg cursor-pointer hover:border-[#00f2ff]/30 select-none transition">
+          <div className="mt-4">
+            {/* Static Day Theme Toggle */}
+            <label className="flex items-center justify-between p-3 glass-panel bg-white/1 border-white/5 rounded-lg cursor-pointer hover:border-[#00f2ff]/30 select-none transition">
               <div>
                 <span className="block text-sm font-semibold text-slate-200">Static Day Theme</span>
-                <span className="block text-[11px] text-slate-400 font-mono">Disable real-time lighting changes</span>
+                <span className="block text-[11px] text-slate-400 font-mono">Disable real-time celestial transitions</span>
               </div>
               <input
                 type="checkbox"

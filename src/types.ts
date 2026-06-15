@@ -5,6 +5,7 @@ export interface GameSettings {
   difficulty: 'easy' | 'normal' | 'hard';
   darkMode: boolean;
   reduceMotion: boolean;
+  enable3D: boolean;
 }
 
 export interface Character {

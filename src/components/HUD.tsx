@@ -204,32 +204,56 @@ export const HUD: React.FC<HUDProps> = ({
         )}
       </div>
 
-      {/* Bottom Virtual Controls for Mobile layout accessibility */}
+      {/* Bottom Virtual Controls for Mobile layout accessibility (Tactile Split-Thumb Console layout) */}
       {!gameState.isPaused && !gameState.isGameOver && !gameState.isCountingDown && (
-        <div id="hud-virtual-buttons" className="flex justify-between items-center w-full pointer-events-auto gap-3 pt-2 pb-1">
-          {/* Jump Controller */}
-          <button
-            onTouchStart={onJumpStart}
-            onClick={onJumpStart}
-            className="flex-1 active:scale-95 h-12 bg-slate-900/65 active:bg-cyan-500/20 backdrop-blur-xs border border-slate-800 active:border-cyan-500/50 rounded-xl select-none flex flex-col justify-center items-center font-sans font-black text-cyan-400/80 cursor-pointer transition shadow-md xl:hidden"
-          >
-            <span className="text-sm font-bold tracking-tight uppercase">JUMP</span>
-            <span className="text-[8px] font-mono text-slate-500 uppercase">TAP SCREEN / SWIPE UP</span>
-          </button>
+        <>
+          {/* Left Side: DUCK Button */}
+          <div className="absolute left-3 bottom-3 pointer-events-auto z-20 xl:hidden">
+            <button
+              onTouchStart={(e) => {
+                e.preventDefault();
+                onDuckStart(true);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                onDuckStart(false);
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onDuckStart(true);
+              }}
+              onMouseUp={(e) => {
+                e.preventDefault();
+                onDuckStart(false);
+              }}
+              onMouseLeave={(e) => {
+                onDuckStart(false);
+              }}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-orange-500/40 bg-slate-950/85 text-orange-400 font-sans flex flex-col justify-center items-center shadow-[0_0_20px_rgba(249,115,22,0.3)] active:bg-orange-500/20 active:border-orange-500 hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] active:scale-90 transition duration-100 select-none cursor-pointer outline-none touch-none"
+            >
+              <span className="text-xs sm:text-sm font-black tracking-wider uppercase leading-none">DUCK</span>
+              <span className="text-[7px] sm:text-[8px] font-mono font-bold text-orange-500 uppercase mt-1 leading-none">HOLD</span>
+            </button>
+          </div>
 
-          {/* Duck Controller */}
-          <button
-            onTouchStart={() => onDuckStart(true)}
-            onTouchEnd={() => onDuckStart(false)}
-            onMouseDown={() => onDuckStart(true)}
-            onMouseUp={() => onDuckStart(false)}
-            onMouseLeave={() => onDuckStart(false)}
-            className="flex-1 active:scale-95 h-12 bg-slate-900/65 active:bg-orange-500/20 backdrop-blur-xs border border-slate-800 active:border-orange-500/50 rounded-xl select-none flex flex-col justify-center items-center font-sans font-black text-orange-400/80 cursor-pointer transition shadow-md xl:hidden"
-          >
-            <span className="text-sm font-bold tracking-tight uppercase">DUCK</span>
-            <span className="text-[8px] font-mono text-slate-500 uppercase">HOLD / SWIPE DOWN</span>
-          </button>
-        </div>
+          {/* Right Side: JUMP Button */}
+          <div className="absolute right-3 bottom-3 pointer-events-auto z-20 xl:hidden">
+            <button
+              onTouchStart={(e) => {
+                e.preventDefault();
+                onJumpStart();
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onJumpStart();
+              }}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-cyan-500/40 bg-slate-950/85 text-cyan-400 font-sans flex flex-col justify-center items-center shadow-[0_0_20px_rgba(6,182,212,0.3)] active:bg-cyan-500/20 active:border-cyan-500 hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] active:scale-90 transition duration-100 select-none cursor-pointer outline-none touch-none"
+            >
+              <span className="text-xs sm:text-sm font-black tracking-wider uppercase leading-none">JUMP</span>
+              <span className="text-[7px] sm:text-[8px] font-mono font-bold text-cyan-500 uppercase mt-1 leading-none">TAP</span>
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

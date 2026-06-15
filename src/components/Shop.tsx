@@ -122,17 +122,62 @@ export const Shop: React.FC<ShopProps> = ({
                 <div className="flex items-center gap-4">
                   {/* Procedural Canvas thumbnail simulation */}
                   <div 
-                    className="w-14 h-14 rounded-xl flex items-center justify-center border shadow-inner transition-transform"
+                    className="w-14 h-14 rounded-xl flex items-center justify-center border shadow-inner transition-transform hover:scale-105"
                     style={{ 
-                      backgroundColor: '#0f172a', 
+                      backgroundColor: '#080d1a', 
                       borderColor: isEquipped ? char.color : '#1e293b' 
                     }}
                   >
-                    {/* Render minimal simulated block style */}
-                    <div 
-                      className={`w-8 h-8 rounded ${char.runnerType === 'sphere' ? 'rounded-full scale-95' : ''}`}
-                      style={{ backgroundColor: char.color }}
-                    />
+                    {/* Render exquisite simulated layered voxel 3D model block */}
+                    <div className="relative w-8 h-8 flex items-center justify-center">
+                      {/* Back Extrusion Layer 3 (deepest shadow) */}
+                      <div 
+                        className="absolute w-7 h-7 translate-x-[-3px] translate-y-[3px] rounded opacity-40 transition-transform"
+                        style={{ backgroundColor: (() => {
+                          const cleanHex = char.color.replace('#', '');
+                          if (cleanHex.length !== 6) return char.color;
+                          let r = parseInt(cleanHex.substring(0, 2), 16);
+                          let g = parseInt(cleanHex.substring(2, 4), 16);
+                          let b = parseInt(cleanHex.substring(4, 6), 16);
+                          return `rgb(${Math.round(r * 0.25)}, ${Math.round(g * 0.25)}, ${Math.round(b * 0.25)})`;
+                        })() }}
+                      />
+                      {/* Back Extrusion Layer 2 (mid-shadow) */}
+                      <div 
+                        className="absolute w-7 h-7 translate-x-[-2px] translate-y-[2px] rounded opacity-70 transition-transform"
+                        style={{ backgroundColor: (() => {
+                          const cleanHex = char.color.replace('#', '');
+                          if (cleanHex.length !== 6) return char.color;
+                          let r = parseInt(cleanHex.substring(0, 2), 16);
+                          let g = parseInt(cleanHex.substring(2, 4), 16);
+                          let b = parseInt(cleanHex.substring(4, 6), 16);
+                          return `rgb(${Math.round(r * 0.45)}, ${Math.round(g * 0.45)}, ${Math.round(b * 0.45)})`;
+                        })() }}
+                      />
+                      {/* Back Extrusion Layer 1 (adjacent volume slice) */}
+                      <div 
+                        className="absolute w-7 h-7 translate-x-[-1px] translate-y-[1px] rounded transition-transform"
+                        style={{ backgroundColor: (() => {
+                          const cleanHex = char.color.replace('#', '');
+                          if (cleanHex.length !== 6) return char.color;
+                          let r = parseInt(cleanHex.substring(0, 2), 16);
+                          let g = parseInt(cleanHex.substring(2, 4), 16);
+                          let b = parseInt(cleanHex.substring(4, 6), 16);
+                          return `rgb(${Math.round(r * 0.7)}, ${Math.round(g * 0.7)}, ${Math.round(b * 0.7)})`;
+                        })() }}
+                      />
+                      {/* Front Face Cover Layer (Lightened) */}
+                      <div 
+                        className={`absolute w-7 h-7 border-t border-l border-white/20 shadow-[inset_0_1px_3px_rgba(255,255,255,0.3)] ${char.runnerType === 'sphere' ? 'rounded-full' : 'rounded'}`}
+                        style={{ backgroundColor: char.color }}
+                      >
+                        {/* Highlights & Accents on Front Face */}
+                        <div 
+                          className="absolute right-0.5 top-0.5 w-1.5 h-1.5 rounded-full" 
+                          style={{ backgroundColor: char.accentColor }}
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="text-left">
                     <span className="block font-bold text-slate-100 text-base">{char.name}</span>

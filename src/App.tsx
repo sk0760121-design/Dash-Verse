@@ -49,6 +49,7 @@ const DEFAULT_SETTINGS: GameSettings = {
   difficulty: 'normal',
   darkMode: false,
   reduceMotion: false,
+  enable3D: true,
 };
 
 const DEFAULT_GAME_STATE: GameState = {

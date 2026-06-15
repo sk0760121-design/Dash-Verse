@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Character, Trail, GameTheme, GameSettings, GameStats, GameState } from '../types';
 import { sound } from '../utils/sound';
+import { Shield, Magnet, Sparkles } from 'lucide-react';
 
 const isMobileClient = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -92,6 +93,17 @@ interface TextFloat {
   life: number;
 }
 
+interface GamePowerUp {
+  id: string;
+  type: 'shield' | 'magnet' | 'multiplier';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  collected: boolean;
+  pulsePhase: number;
+}
+
 export const GameCanvas: React.FC<GameCanvasProps> = ({
   settings,
   stats,
@@ -144,6 +156,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     // Entities
     obstacles: [] as GameObstacle[],
     coins: [] as GameCoin[],
+    powerUps: [] as GamePowerUp[],
     particles: [] as VisualParticle[],
     floats: [] as TextFloat[],
     weatherParticles: [] as WeatherParticle[],
@@ -152,7 +165,13 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     minDistanceBetweenObstacles: 280,
     nextObstacleTimer: 100,
     nextCoinTimer: 40,
+    nextPowerUpTimer: 250,
     lastObstacleType: '',
+
+    // Active power-up timers (frames)
+    shieldActiveTimer: 0,
+    magnetActiveTimer: 0,
+    multiplierActiveTimer: 0,
     
     // Day cycle
     dayProgress: 0, // 0 to 1 scaling, day/night cycles every 3000 score points
@@ -281,11 +300,16 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     // Clear lists
     engine.obstacles = [];
     engine.coins = [];
+    engine.powerUps = [];
     engine.particles = [];
     engine.floats = [];
     engine.weatherParticles = [];
     engine.nextObstacleTimer = 60;
     engine.nextCoinTimer = 100;
+    engine.nextPowerUpTimer = 350 + Math.random() * 300;
+    engine.shieldActiveTimer = 0;
+    engine.magnetActiveTimer = 0;
+    engine.multiplierActiveTimer = 0;
     engine.screenShake = 0;
     engine.screenFlash = 0;
     engine.dayProgress = 0;
@@ -347,6 +371,20 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     };
   }, [gameState.isPaused, gameState.isGameOver, gameState.isCountingDown]);
 
+  // Expose global bypass functions to allow mobile widgets to bypass browser Event-simulation sandbox restrictions
+  useEffect(() => {
+    (window as any).triggerGameJump = () => {
+      triggerJump();
+    };
+    (window as any).triggerGameDuck = (active: boolean) => {
+      triggerDuck(active);
+    };
+    return () => {
+      delete (window as any).triggerGameJump;
+      delete (window as any).triggerGameDuck;
+    };
+  }, [gameState.isPaused, gameState.isGameOver, gameState.isCountingDown]);
+
   // Touch triggers (called directly from HUD buttons overlay or gestures)
   const triggerJump = () => {
     const engine = engineRef.current;
@@ -368,6 +406,13 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       engine.jumpCount = 2;
       sound.playDoubleJump();
       spawnDoubleJumpParticles();
+      incrementStats('totalJumps', 1);
+    } else if (engine.jumpCount === 2 && engine.selectedCharacter.hasTripleJump) {
+      // Triple Jump supported for special cosmic runners
+      engine.playerVY = DOUBLE_JUMP_FORCE * 1.05;
+      engine.jumpCount = 3;
+      sound.playJump();
+      spawnTripleJumpParticles();
       incrementStats('totalJumps', 1);
     }
   };
@@ -429,6 +474,27 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         alpha: 1,
         life: 0,
         maxLife: 25 + Math.random() * 15,
+        shape: 'spark',
+      });
+    }
+  };
+
+  const spawnTripleJumpParticles = () => {
+    const engine = engineRef.current;
+    if (settings.reduceMotion) return;
+    const color = '#38bdf8'; // Sky-cyan cosmic stellar energy
+    const count = isMobileClient ? 10 : 25;
+    for (let i = 0; i < count; i++) {
+      engine.particles.push({
+        x: engine.playerX + engine.playerWidth / 2,
+        y: engine.playerY + engine.playerHeight / 2,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8,
+        size: 2.5 + Math.random() * 4,
+        color: color,
+        alpha: 1,
+        life: 0,
+        maxLife: 30 + Math.random() * 20,
         shape: 'spark',
       });
     }
@@ -590,6 +656,11 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     // Time cycle advancement
     engine.time++;
 
+    // Power-up timers decay
+    if (engine.shieldActiveTimer > 0) engine.shieldActiveTimer--;
+    if (engine.magnetActiveTimer > 0) engine.magnetActiveTimer--;
+    if (engine.multiplierActiveTimer > 0) engine.multiplierActiveTimer--;
+
     // Multiplier timer decay
     if (engine.multiplierTimer > 0) {
       engine.multiplierTimer--;
@@ -607,8 +678,9 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     const deltaDistance = engine.speed / 60; // 60 FPS scale
     engine.distance += deltaDistance;
 
-    // Accurate fractional score accumulator based on active multiplier
-    const scoreToAdd = deltaDistance * 10 * engine.multiplier;
+    // Accurate fractional score accumulator based on active multiplier & power-up multiplier (2x)
+    const activeMultiplierScale = engine.multiplierActiveTimer > 0 ? 2 : 1;
+    const scoreToAdd = deltaDistance * 10 * engine.multiplier * activeMultiplierScale;
     engine.scoreAccumulator = (engine.scoreAccumulator || 0) + scoreToAdd;
     if (engine.scoreAccumulator >= 1) {
       const wholePoints = Math.floor(engine.scoreAccumulator);
@@ -644,6 +716,9 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         distance: Math.floor(engine.distance),
         multiplier: engine.multiplier,
         consecutivePerfectJumps: engine.consecutivePerfectJumps,
+        shieldTimer: engine.shieldActiveTimer,
+        magnetTimer: engine.magnetActiveTimer,
+        powerMultiplierTimer: engine.multiplierActiveTimer,
       }));
     }
 
@@ -699,6 +774,11 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     engine.nextCoinTimer -= 1;
     if (engine.nextCoinTimer <= 0) {
       spawnCoinTrack();
+    }
+
+    engine.nextPowerUpTimer -= 1;
+    if (engine.nextPowerUpTimer <= 0) {
+      spawnPowerUp();
     }
 
     // Physics update: Obstacles
@@ -778,8 +858,46 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
       // Check collision
       if (checkCollision(engine.playerX, engine.playerY, engine.playerWidth, engine.playerHeight, obs.x, obs.y, obs.width, obs.height)) {
-        triggerGameOver();
-        return;
+        if (engine.shieldActiveTimer > 0) {
+          // Block collision with active Shield
+          engine.shieldActiveTimer = 0;
+          engine.screenFlash = 0.8;
+          engine.screenShake = 12;
+
+          // Push visual spark bubbles
+          for (let pIdx = 0; pIdx < 20; pIdx++) {
+            engine.particles.push({
+              x: engine.playerX + engine.playerWidth / 2,
+              y: engine.playerY + engine.playerHeight / 2,
+              vx: (Math.random() - 0.5) * 12,
+              vy: (Math.random() - 0.5) * 12,
+              size: 4 + Math.random() * 5,
+              color: '#3b82f6',
+              alpha: 1,
+              life: 0,
+              maxLife: 35 + Math.random() * 20,
+              shape: 'circle',
+            });
+          }
+
+          engine.floats.push({
+            x: engine.playerX + engine.playerWidth / 2,
+            y: engine.playerY - 20,
+            text: 'SHIELD BROKEN!',
+            color: '#3b82f6',
+            alpha: 1,
+            life: 0,
+          });
+
+          // Play happy sound for recovery
+          sound.playAchievement();
+
+          engine.obstacles.splice(i, 1);
+          continue;
+        } else {
+          triggerGameOver();
+          return;
+        }
       }
 
       // Cleanup off-screen
@@ -791,7 +909,27 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     // Physics update: Coins
     for (let i = engine.coins.length - 1; i >= 0; i--) {
       const coin = engine.coins[i];
-      coin.x -= engine.speed;
+
+      // Magnet pull calculation
+      if (engine.magnetActiveTimer > 0) {
+        const px = engine.playerX + engine.playerWidth / 2;
+        const py = engine.playerY + engine.playerHeight / 2;
+        const cx = coin.x + coin.width / 2;
+        const cy = coin.y + coin.height / 2;
+        const dist = Math.hypot(px - cx, py - cy);
+
+        if (dist < 260) {
+          // Accelerating magnetic vacuum pull towards player
+          const pullIntensity = Math.min(14, (260 - dist) * 0.1);
+          coin.x += ((px - cx) / dist) * pullIntensity;
+          coin.y += ((py - cy) / dist) * pullIntensity;
+        } else {
+          coin.x -= engine.speed;
+        }
+      } else {
+        coin.x -= engine.speed;
+      }
+
       coin.rotationPhase += 0.15;
 
       // Check collision (highly generous circle/rect mapping)
@@ -835,6 +973,66 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       // Cleanup
       if (coin.x < -100) {
         engine.coins.splice(i, 1);
+      }
+    }
+
+    // Physics update: Power-Ups
+    for (let i = engine.powerUps.length - 1; i >= 0; i--) {
+      const pu = engine.powerUps[i];
+      pu.x -= engine.speed;
+      pu.pulsePhase += 0.08;
+
+      // check collision
+      if (checkCollision(engine.playerX, engine.playerY, engine.playerWidth, engine.playerHeight, pu.x, pu.y, pu.width, pu.height)) {
+        pu.collected = true;
+        
+        let pColor = '#38bdf8'; // shield
+        let pText = 'SHIELD PROTECT!';
+        if (pu.type === 'magnet') {
+          pColor = '#ec4899'; // pink magnet
+          pText = 'COIN MAGNET!';
+          engine.magnetActiveTimer = 480; // 8 seconds of coin pulling
+        } else if (pu.type === 'multiplier') {
+          pColor = '#eab308'; // gold score multiplier
+          pText = 'DOUBLE POINTS! x2';
+          engine.multiplierActiveTimer = 360; // 6 seconds of x2 score multiplier
+        } else {
+          engine.shieldActiveTimer = 600; // 10 seconds of shield protection
+        }
+
+        for (let j = 0; j < 15; j++) {
+          engine.particles.push({
+            x: pu.x + pu.width / 2,
+            y: pu.y + pu.height / 2,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            size: 3 + Math.random() * 4,
+            color: pColor,
+            alpha: 1,
+            life: 0,
+            maxLife: 30 + Math.random() * 20,
+            shape: 'circle',
+          });
+        }
+
+        engine.floats.push({
+          x: pu.x,
+          y: pu.y - 15,
+          text: pText,
+          color: pColor,
+          alpha: 1,
+          life: 0,
+        });
+
+        sound.playAchievement();
+
+        engine.powerUps.splice(i, 1);
+        continue;
+      }
+
+      // Cleanup
+      if (pu.x < -100) {
+        engine.powerUps.splice(i, 1);
       }
     }
 
@@ -1210,6 +1408,42 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
     // Set countdown for next cluster
     engine.nextCoinTimer = (450 + Math.random() * 400) / engine.speed;
+  };
+
+  // Power-Ups Spawn System
+  const spawnPowerUp = () => {
+    const engine = engineRef.current;
+
+    // Choose random power-up: shield, magnet, or multiplier
+    const types: ('shield' | 'magnet' | 'multiplier')[] = ['shield', 'magnet', 'multiplier'];
+    const pType = types[Math.floor(Math.random() * types.length)];
+
+    const py = GROUND_Y - 60 - Math.random() * 45; // float above ground level
+
+    // Ensure we don't spawn powerups directly on top of an obstacle
+    let tooClose = false;
+    engine.obstacles.forEach(obs => {
+      if (obs.x > VIRTUAL_WIDTH - 60) tooClose = true;
+    });
+
+    if (tooClose) {
+      engine.nextPowerUpTimer = 30; // retry soon
+      return;
+    }
+
+    engine.powerUps.push({
+      id: `${engine.time}-power-${pType}-${Math.random()}`,
+      type: pType,
+      x: VIRTUAL_WIDTH + 50,
+      y: py,
+      width: 26,
+      height: 26,
+      collected: false,
+      pulsePhase: Math.random() * Math.PI,
+    });
+
+    // Reset countdown for next power-up cluster
+    engine.nextPowerUpTimer = 750 + Math.random() * 600;
   };
 
   const triggerGameOver = () => {
@@ -1803,6 +2037,180 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
         ctx.restore();
       }
+    });
+
+    // 7.5. Draw Active Power-Ups (Magnets, Score Multipliers, Shields)
+    engine.powerUps.forEach(pu => {
+      ctx.save();
+      
+      const cx = pu.x + pu.width / 2;
+      const cy = pu.y + pu.height / 2;
+      const pulse = Math.sin(pu.pulsePhase) * 4;
+      const sizeOffset = Math.sin(engine.time * 0.1) * 2;
+      const radius = pu.width / 2 + sizeOffset;
+      
+      if (settings.enable3D) {
+        // Render 3D layered capsule or pedestal base
+        const extrusion = 4;
+        for (let d = extrusion; d >= 0; d--) {
+          ctx.save();
+          ctx.translate(cx - d * 0.8, cy + d * 0.5 + pulse);
+          
+          let colorTheme = '#38bdf8'; // Shield (Blue)
+          let darkTheme = '#0369a1';
+          if (pu.type === 'magnet') {
+            colorTheme = '#db2777'; // Magnet (Pink/Crimson)
+            darkTheme = '#831843';
+          } else if (pu.type === 'multiplier') {
+            colorTheme = '#eab308'; // Multiplier (Gold)
+            darkTheme = '#713f12';
+          }
+
+          if (d > 0) {
+            ctx.fillStyle = darkTheme;
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            // Front cover glass panel
+            ctx.fillStyle = colorTheme;
+            if (!settings.reduceMotion && !isMobileClient) {
+              ctx.shadowBlur = 15;
+              ctx.shadowColor = colorTheme;
+            }
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Inner gloss ring
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.2;
+            ctx.globalAlpha = 0.4;
+            ctx.beginPath();
+            ctx.arc(-2, -2, radius * 0.7, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+
+            // Draw icon inside depending on type
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2.0;
+
+            if (pu.type === 'shield') {
+              // Draw a crisp little shield emblem
+              ctx.beginPath();
+              ctx.moveTo(-6, -8);
+              ctx.lineTo(6, -8);
+              ctx.lineTo(6, -2);
+              ctx.quadraticCurveTo(6, 6, 0, 9);
+              ctx.quadraticCurveTo(-6, 6, -6, -2);
+              ctx.closePath();
+              ctx.fill();
+              
+              // Inner glowing blue core details
+              ctx.fillStyle = '#0284c7';
+              ctx.beginPath();
+              ctx.moveTo(-3, -6);
+              ctx.lineTo(3, -6);
+              ctx.lineTo(3, -1);
+              ctx.quadraticCurveTo(3, 4, 0, 6);
+              ctx.quadraticCurveTo(-3, 4, -3, -1);
+              ctx.closePath();
+              ctx.fill();
+            } else if (pu.type === 'magnet') {
+              // Draw a gorgeous U-shape Magnet
+              ctx.save();
+              ctx.rotate(Math.PI / 4 + engine.time * 0.04);
+              ctx.lineWidth = 3.5;
+              ctx.lineCap = 'round';
+              
+              // Draw U magnet curve
+              ctx.beginPath();
+              ctx.arc(0, 0, 5, 0, Math.PI, false);
+              ctx.moveTo(-5, 0);
+              ctx.lineTo(-5, -6);
+              ctx.moveTo(5, 0);
+              ctx.lineTo(5, -6);
+              ctx.strokeStyle = '#f43f5e';
+              ctx.stroke();
+
+              // Draw white magnetic tips
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = 3.5;
+              ctx.beginPath();
+              ctx.moveTo(-5, -6); ctx.lineTo(-5, -8);
+              ctx.moveTo(5, -6); ctx.lineTo(5, -8);
+              ctx.stroke();
+              ctx.restore();
+            } else if (pu.type === 'multiplier') {
+              // Draw a sweet "2x" star multiplier
+              ctx.font = 'bold 11px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText('2X', 0, 0);
+              
+              // Sparklet dot
+              ctx.fillStyle = '#fef08a';
+              ctx.fillRect(-8, -8, 2.5, 2.5);
+              ctx.fillRect(7, 7, 2.5, 2.5);
+            }
+          }
+          ctx.restore();
+        }
+      } else {
+        // Classic 2D style fallback with high brightness glows
+        ctx.translate(cx, cy + pulse);
+        
+        let colorTheme = '#38bdf8';
+        if (pu.type === 'magnet') colorTheme = '#db2777';
+        if (pu.type === 'multiplier') colorTheme = '#eab308';
+
+        ctx.fillStyle = colorTheme;
+        if (!settings.reduceMotion && !isMobileClient) {
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = colorTheme;
+        }
+
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White border core
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.0;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        if (pu.type === 'shield') {
+          ctx.beginPath();
+          ctx.moveTo(-5, -7);
+          ctx.lineTo(5, -7);
+          ctx.lineTo(5, -2);
+          ctx.quadraticCurveTo(5, 5, 0, 8);
+          ctx.quadraticCurveTo(-5, 5, -5, -2);
+          ctx.closePath();
+          ctx.fill();
+        } else if (pu.type === 'magnet') {
+          ctx.save();
+          ctx.rotate(engine.time * 0.05);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 3.0;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.arc(0, 0, 4, 0, Math.PI, false);
+          ctx.moveTo(-4, 0); ctx.lineTo(-4, -6);
+          ctx.moveTo(4, 0); ctx.lineTo(4, -6);
+          ctx.stroke();
+          ctx.restore();
+        } else if (pu.type === 'multiplier') {
+          ctx.font = 'bold 10px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('2X', 0, 0);
+        }
+      }
+      ctx.restore();
     });
 
     // 8. Draw Active Obstacles (High-Fidelity Facets & Lighting Models)
@@ -2615,7 +3023,192 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         }
       }
 
+      // Render wearable accessories only on the frontmost layer (d === 0) of the runner
+      if (d === 0) {
+        let headCX = 0;
+        let headCY = 0;
+        let eyeX = 0;
+        let eyeY = 0;
+        let shouldDraw = true;
+
+        if (c.runnerType === 'dino') {
+          headCX = 33;
+          headCY = 0;
+          eyeX = 36;
+          eyeY = 4;
+        } else if (c.runnerType === 'robot') {
+          headCX = 25;
+          headCY = 0;
+          eyeX = 25;
+          eyeY = 3;
+        } else if (c.runnerType === 'fox') {
+          headCX = 32;
+          headCY = 2;
+          eyeX = 30;
+          eyeY = 5;
+        } else if (c.runnerType === 'sphere') {
+          headCX = engine.playerWidth / 2;
+          headCY = drawHeight / 2 - 14;
+          eyeX = engine.playerWidth / 2 - 4;
+          eyeY = drawHeight / 2 - 3;
+        } else {
+          shouldDraw = false;
+        }
+
+        if (shouldDraw) {
+          const activeHat = gameState.activeHatId;
+          const activeGlasses = gameState.activeGlassesId;
+
+          // Draw Equipped Hat
+          if (activeHat && activeHat !== 'acc_none_hat') {
+            ctx.save();
+            if (activeHat === 'acc_cap') {
+              ctx.fillStyle = '#dc2626';
+              ctx.fillRect(headCX - 12, headCY - 4, 18, 5);
+              ctx.fillRect(headCX - 2, headCY - 4, 15, 2);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(headCX - 7, headCY - 3, 3, 3);
+            } else if (activeHat === 'acc_crown') {
+              ctx.fillStyle = '#fbbf24';
+              ctx.fillRect(headCX - 10, headCY - 2, 20, 2);
+              ctx.fillRect(headCX - 10, headCY - 7, 3, 5);
+              ctx.fillRect(headCX - 2, headCY - 9, 4, 7);
+              ctx.fillRect(headCX + 7, headCY - 7, 3, 5);
+              ctx.fillStyle = '#dc2626';
+              ctx.fillRect(headCX - 1, headCY - 1, 2, 2);
+              ctx.fillStyle = '#10b981';
+              ctx.fillRect(headCX - 9, headCY - 8, 1, 1);
+              ctx.fillRect(headCX - 1, headCY - 10, 2, 1);
+              ctx.fillRect(headCX + 8, headCY - 8, 1, 1);
+            } else if (activeHat === 'acc_cowboy') {
+              ctx.fillStyle = '#78350f';
+              ctx.fillRect(headCX - 15, headCY - 2, 30, 2.5);
+              ctx.fillRect(headCX - 8, headCY - 8, 16, 6);
+              ctx.fillStyle = '#f59e0b';
+              ctx.fillRect(headCX - 8, headCY - 3.5, 16, 1.5);
+            } else if (activeHat === 'acc_pirate') {
+              ctx.fillStyle = '#0f172a';
+              ctx.fillRect(headCX - 14, headCY - 2, 28, 2.5);
+              ctx.fillRect(headCX - 9, headCY - 6, 18, 4);
+              ctx.fillRect(headCX - 14, headCY - 5, 4, 3);
+              ctx.fillRect(headCX + 10, headCY - 5, 4, 3);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(headCX - 2, headCY - 4, 4, 1.5);
+              ctx.fillRect(headCX - 1, headCY - 5, 2, 3.5);
+            } else if (activeHat === 'acc_detective') {
+              ctx.fillStyle = '#475569';
+              ctx.fillRect(headCX - 11, headCY - 6, 22, 6);
+              ctx.fillRect(headCX - 14, headCY - 2, 28, 2);
+              ctx.fillStyle = '#1e293b';
+              ctx.fillRect(headCX - 2, headCY - 8, 4, 2);
+            }
+            ctx.restore();
+          }
+
+          // Draw Equipped Glasses
+          if (activeGlasses && activeGlasses !== 'acc_none_glasses') {
+            ctx.save();
+            if (activeGlasses === 'acc_glasses_cyber') {
+              ctx.fillStyle = 'rgba(34, 211, 238, 0.9)';
+              ctx.fillRect(eyeX - 3, eyeY - 2, 13, 5);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(eyeX + 2, eyeY - 2, 2, 5);
+            } else if (activeGlasses === 'acc_glasses_retro') {
+              ctx.fillStyle = '#0f172a';
+              ctx.fillRect(eyeX - 2, eyeY - 1, 12, 3.5);
+              ctx.fillRect(eyeX - 2, eyeY - 1.5, 2, 1);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(eyeX + 1, eyeY - 1, 1, 1);
+              ctx.fillRect(eyeX + 6, eyeY - 1, 1, 1);
+            } else if (activeGlasses === 'acc_glasses_deal') {
+              ctx.fillStyle = '#000000';
+              ctx.fillRect(eyeX - 2, eyeY - 1, 4, 3);
+              ctx.fillRect(eyeX + 2, eyeY, 1, 1);
+              ctx.fillRect(eyeX + 5, eyeY - 1, 4, 3);
+              ctx.fillRect(eyeX + 9, eyeY, 1, 1);
+              ctx.fillRect(eyeX + 2, eyeY - 1, 3, 1.5);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(eyeX - 1, eyeY - 1, 1, 1);
+              ctx.fillRect(eyeX + 6, eyeY - 1, 1, 1);
+            }
+            ctx.restore();
+          }
+        }
+      }
+
       ctx.restore();
+    }
+
+    // Active power-up character overlay auras
+    if (engine.shieldActiveTimer > 0) {
+      ctx.save();
+      const pcx = engine.playerX + engine.playerWidth / 2;
+      const pcy = drawY + drawHeight / 2;
+      const shieldRad = Math.max(engine.playerWidth, drawHeight) * 0.72;
+      
+      const pulse = Math.sin(engine.time * 0.12) * 4;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5 + Math.sin(engine.time * 0.2) * 1.0;
+      if (!settings.reduceMotion && !isMobileClient) {
+        ctx.shadowBlur = 15 + pulse;
+        ctx.shadowColor = '#0ea5e9';
+      }
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
+      
+      ctx.beginPath();
+      ctx.arc(pcx, pcy, shieldRad + pulse, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = '#e0f2fe';
+      ctx.lineWidth = 1.0;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.arc(pcx, pcy, shieldRad + pulse - 5, engine.time * 0.05, engine.time * 0.05 + 1.2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(pcx, pcy, shieldRad + pulse - 5, engine.time * 0.05 + Math.PI, engine.time * 0.05 + Math.PI + 1.2);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    if (engine.magnetActiveTimer > 0) {
+      ctx.save();
+      const pcx = engine.playerX + engine.playerWidth / 2;
+      const pcy = drawY + drawHeight / 2;
+      
+      ctx.strokeStyle = '#ec4899';
+      ctx.lineWidth = 2.0;
+      ctx.globalAlpha = 0.75 + Math.sin(engine.time * 0.15) * 0.2;
+      ctx.lineCap = 'round';
+      
+      const arcRad = 32 + Math.abs(Math.sin(engine.time * 0.1)) * 6;
+      ctx.beginPath();
+      ctx.arc(pcx, pcy - 12, arcRad, Math.PI * 1.2, Math.PI * 1.8);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(pcx, pcy - 12, arcRad - 6, Math.PI * 1.25, Math.PI * 1.75);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    if (engine.multiplierActiveTimer > 0) {
+      if (engine.time % 4 === 0 && !settings.reduceMotion) {
+        engine.particles.push({
+          x: engine.playerX + Math.random() * engine.playerWidth,
+          y: drawY + drawHeight - Math.random() * 8,
+          vx: (Math.random() - 0.5) * 2,
+          vy: -2 - Math.random() * 2,
+          size: 2 + Math.random() * 3,
+          color: '#eab308',
+          alpha: 1,
+          life: 0,
+          maxLife: 20 + Math.random() * 15,
+          shape: 'spark',
+        });
+      }
     }
 
     // 10. Draw custom background shadow particles (Silhouette style trails)
@@ -2792,13 +3385,67 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onClick={handleCanvasClick}
-      className={`relative w-full touch-none ${isFullscreen ? 'h-full rounded-none' : 'h-[320px] md:h-[400px] rounded-2xl'} overflow-hidden bg-slate-900 shadow-inner select-none outline-none border ${isFullscreen ? 'border-none' : 'border-slate-800'} cursor-pointer`}
+      className={`relative w-full touch-none ${isFullscreen ? 'h-full rounded-none' : 'h-[220px] min-[400px]:h-[260px] sm:h-[320px] md:h-[400px] rounded-2xl'} overflow-hidden bg-slate-900 shadow-inner select-none outline-none border ${isFullscreen ? 'border-none' : 'border-slate-800'} cursor-pointer`}
     >
       <canvas 
         ref={canvasRef} 
         id="runner-game-canvas"
         className="block"
       />
+
+      {/* Dynamic Power-Up HUD indicators overlay */}
+      <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none select-none z-30">
+        {gameState.shieldTimer && gameState.shieldTimer > 0 ? (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-sky-500/30 backdrop-blur-md shadow-lg animate-pulse-slow">
+            <div className="relative flex items-center justify-center w-5 h-5 rounded-full bg-sky-500/20 text-sky-400">
+              <Shield className="w-3.5 h-3.5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black tracking-wider uppercase text-sky-300 font-sans leading-none">Shield active</span>
+              <div className="w-16 h-1 bg-slate-800 rounded-full overflow-hidden mt-1 select-none">
+                <div 
+                  className="h-full bg-sky-400 rounded-full transition-all duration-100 ease-linear" 
+                  style={{ width: `${Math.min(100, (gameState.shieldTimer / 600) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {gameState.magnetTimer && gameState.magnetTimer > 0 ? (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-pink-500/30 backdrop-blur-md shadow-lg animate-pulse-slow">
+            <div className="relative flex items-center justify-center w-5 h-5 rounded-full bg-pink-500/20 text-pink-400">
+              <Magnet className="w-3.5 h-3.5 rotate-180" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black tracking-wider uppercase text-pink-300 font-sans leading-none">Coin Magnet</span>
+              <div className="w-16 h-1 bg-slate-800 rounded-full overflow-hidden mt-1 select-none">
+                <div 
+                  className="h-full bg-pink-400 rounded-full transition-all duration-100 ease-linear" 
+                  style={{ width: `${Math.min(100, (gameState.magnetTimer / 480) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {gameState.powerMultiplierTimer && gameState.powerMultiplierTimer > 0 ? (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-amber-500/30 backdrop-blur-md shadow-lg animate-pulse-slow">
+            <div className="relative flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 text-amber-400">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black tracking-wider uppercase text-amber-300 font-sans leading-none">Double Points</span>
+              <div className="w-16 h-1 bg-slate-800 rounded-full overflow-hidden mt-1 select-none">
+                <div 
+                  className="h-full bg-amber-400 rounded-full transition-all duration-100 ease-linear" 
+                  style={{ width: `${Math.min(100, (gameState.powerMultiplierTimer / 360) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Character, Trail, GameTheme, GameStats } from '../types';
-import { ArrowLeft, Coins, Check, Lock, Sparkles, User, Palette } from 'lucide-react';
+import { Character, Trail, GameTheme, GameStats, Accessory } from '../types';
+import { ArrowLeft, Coins, Check, Lock, Sparkles, User, Palette, Crown } from 'lucide-react';
 import { sound } from '../utils/sound';
 
 interface ShopProps {
@@ -8,11 +8,14 @@ interface ShopProps {
   characters: Character[];
   trails: Trail[];
   themes: GameTheme[];
+  accessories?: Accessory[];
   activeCharacterId: string;
   activeTrailId: string;
   activeThemeId: string;
-  onSelectItem: (type: 'character' | 'trail' | 'theme', id: string) => void;
-  onPurchaseItem: (type: 'character' | 'trail' | 'theme', id: string, cost: number) => void;
+  activeHatId?: string;
+  activeGlassesId?: string;
+  onSelectItem: (type: 'character' | 'trail' | 'theme' | 'accessory', id: string) => void;
+  onPurchaseItem: (type: 'character' | 'trail' | 'theme' | 'accessory', id: string, cost: number) => void;
   onClose: () => void;
 }
 
@@ -21,16 +24,19 @@ export const Shop: React.FC<ShopProps> = ({
   characters,
   trails,
   themes,
+  accessories = [],
   activeCharacterId,
   activeTrailId,
   activeThemeId,
+  activeHatId = 'acc_none_hat',
+  activeGlassesId = 'acc_none_glasses',
   onSelectItem,
   onPurchaseItem,
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'characters' | 'trails' | 'themes'>('characters');
+  const [activeTab, setActiveTab] = useState<'characters' | 'trails' | 'themes' | 'accessories'>('characters');
 
-  const handlePurchase = (type: 'character' | 'trail' | 'theme', id: string, cost: number) => {
+  const handlePurchase = (type: 'character' | 'trail' | 'theme' | 'accessory', id: string, cost: number) => {
     if (stats.coins >= cost) {
       onPurchaseItem(type, id, cost);
       sound.playCoin();
@@ -40,13 +46,13 @@ export const Shop: React.FC<ShopProps> = ({
     }
   };
 
-  const handleSelect = (type: 'character' | 'trail' | 'theme', id: string) => {
+  const handleSelect = (type: 'character' | 'trail' | 'theme' | 'accessory', id: string) => {
     onSelectItem(type, id);
     sound.playJump();
   };
 
   return (
-    <div id="shop-container" className="glass-panel text-slate-100 p-6 rounded-2xl max-w-4xl mx-auto shadow-2xl z-10 relative">
+    <div id="shop-container" className="glass-panel text-slate-100 p-4 sm:p-6 rounded-2xl max-w-4xl mx-auto shadow-2xl z-10 relative">
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 pb-4 border-b border-white/5">
         <div className="flex items-center gap-3">
@@ -73,10 +79,10 @@ export const Shop: React.FC<ShopProps> = ({
       </div>
 
       {/* Tabs navigation panel */}
-      <div className="flex border-b border-white/5 mb-6 font-sans text-xs tracking-wider uppercase font-bold">
+      <div className="flex overflow-x-auto whitespace-nowrap scrollbar-none border-b border-white/5 mb-6 font-sans text-xs tracking-wider uppercase font-bold gap-1 min-w-full">
         <button
           onClick={() => setActiveTab('characters')}
-          className={`flex items-center gap-2 px-5 py-3 border-b-2 transition cursor-pointer ${
+          className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 border-b-2 transition cursor-pointer ${
             activeTab === 'characters'
               ? 'border-cyan-400 text-cyan-300 bg-cyan-400/5'
               : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -86,7 +92,7 @@ export const Shop: React.FC<ShopProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('trails')}
-          className={`flex items-center gap-2 px-5 py-3 border-b-2 transition cursor-pointer ${
+          className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 border-b-2 transition cursor-pointer ${
             activeTab === 'trails'
               ? 'border-pink-500 text-pink-400 bg-pink-500/5'
               : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -96,13 +102,23 @@ export const Shop: React.FC<ShopProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('themes')}
-          className={`flex items-center gap-2 px-5 py-3 border-b-2 transition cursor-pointer ${
+          className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 border-b-2 transition cursor-pointer ${
             activeTab === 'themes'
               ? 'border-emerald-500 text-emerald-400 bg-emerald-500/5'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
           <Palette size={14} /> Sky Themes
+        </button>
+        <button
+          onClick={() => setActiveTab('accessories')}
+          className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 border-b-2 transition cursor-pointer ${
+            activeTab === 'accessories'
+              ? 'border-amber-500 text-amber-400 bg-amber-500/5'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Crown size={14} /> Hats & Glasses
         </button>
       </div>
 
@@ -349,6 +365,137 @@ export const Shop: React.FC<ShopProps> = ({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {activeTab === 'accessories' && (
+        <div className="flex flex-col gap-6">
+          {/* Sub-categories separation */}
+          <div>
+            <h3 className="text-sm font-black tracking-wider uppercase text-amber-400 mb-3 font-sans flex items-center gap-2">🎩 Head Accessories (Hats)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {accessories.filter(a => a.type === 'hat').map(acc => {
+                const isEquipped = activeHatId === acc.id;
+                const canAfford = stats.coins >= acc.cost;
+                return (
+                  <div
+                    key={acc.id}
+                    className={`relative flex items-center justify-between p-4 glass-panel rounded-xl transition duration-200 ${
+                      isEquipped ? 'border-amber-500 bg-amber-500/5' : 'border-white/10 hover:border-amber-400/30 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className="w-12 h-12 rounded-lg flex items-center justify-center border shadow-inner text-2xl"
+                        style={{ 
+                          backgroundColor: '#0f172a', 
+                          borderColor: isEquipped ? acc.color : '#1e293b' 
+                        }}
+                      >
+                        {acc.emoji}
+                      </div>
+                      <div className="text-left">
+                        <span className="block font-bold text-slate-100 text-base">{acc.name}</span>
+                        <span className="block text-xs font-mono text-slate-400">{acc.description}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      {acc.unlocked ? (
+                        isEquipped ? (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-amber-950 rounded-lg text-xs font-bold uppercase select-none">
+                            <Check size={14} strokeWidth={3} /> Active
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleSelect('accessory', acc.id)}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold uppercase transition cursor-pointer"
+                          >
+                            Equip
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          onClick={() => handlePurchase('accessory', acc.id, acc.cost)}
+                          disabled={!canAfford}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase transition cursor-pointer ${
+                            canAfford
+                              ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
+                              : 'bg-slate-800 text-slate-500 opacity-60 cursor-not-allowed'
+                          }`}
+                        >
+                          <Lock size={12} /> 🪙 {acc.cost}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-black tracking-wider uppercase text-cyan-400 mb-3 font-sans flex items-center gap-2">🕶️ Face Accessories (Glasses)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {accessories.filter(a => a.type === 'glasses').map(acc => {
+                const isEquipped = activeGlassesId === acc.id;
+                const canAfford = stats.coins >= acc.cost;
+                return (
+                  <div
+                    key={acc.id}
+                    className={`relative flex items-center justify-between p-4 glass-panel rounded-xl transition duration-200 ${
+                      isEquipped ? 'border-cyan-500 bg-cyan-500/5' : 'border-white/10 hover:border-cyan-400/30 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className="w-12 h-12 rounded-lg flex items-center justify-center border shadow-inner text-2xl"
+                        style={{ 
+                          backgroundColor: '#0f172a', 
+                          borderColor: isEquipped ? acc.color : '#1e293b' 
+                        }}
+                      >
+                        {acc.emoji}
+                      </div>
+                      <div className="text-left">
+                        <span className="block font-bold text-slate-100 text-base">{acc.name}</span>
+                        <span className="block text-xs font-mono text-slate-400">{acc.description}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      {acc.unlocked ? (
+                        isEquipped ? (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500 text-cyan-950 rounded-lg text-xs font-bold uppercase select-none">
+                            <Check size={14} strokeWidth={3} /> Active
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleSelect('accessory', acc.id)}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold uppercase transition cursor-pointer"
+                          >
+                            Equip
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          onClick={() => handlePurchase('accessory', acc.id, acc.cost)}
+                          disabled={!canAfford}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase transition cursor-pointer ${
+                            canAfford
+                              ? 'bg-cyan-400 hover:bg-cyan-300 text-slate-950'
+                              : 'bg-slate-800 text-slate-500 opacity-60 cursor-not-allowed'
+                          }`}
+                        >
+                          <Lock size={12} /> 🪙 {acc.cost}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>

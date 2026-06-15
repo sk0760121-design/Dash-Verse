@@ -56,7 +56,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   };
 
   return (
-    <div id="settings-root" className="glass-panel text-slate-100 p-6 rounded-2xl max-w-2xl mx-auto shadow-2xl z-10 relative">
+    <div id="settings-root" className="glass-panel text-slate-100 p-4 sm:p-6 rounded-2xl max-w-2xl mx-auto shadow-2xl z-10 relative">
       {/* Header section */}
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
         <div className="flex items-center gap-3">
@@ -90,7 +90,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </div>
                 <input
                   type="checkbox"
-                  checked={settings.musicEnabled}
+                  checked={settings.musicEnabled ?? true}
                   onChange={() => toggleOption('musicEnabled')}
                   className="accent-cyan-400 h-4 w-4 rounded cursor-pointer"
                 />
@@ -103,7 +103,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </div>
                 <input
                   type="checkbox"
-                  checked={settings.soundEnabled}
+                  checked={settings.soundEnabled ?? true}
                   onChange={() => toggleOption('soundEnabled')}
                   className="accent-cyan-400 h-4 w-4 rounded cursor-pointer"
                 />
@@ -121,7 +121,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 min="0"
                 max="1.0"
                 step="0.05"
-                value={settings.volume}
+                value={settings.volume ?? 0.5}
                 onChange={handleVolume}
                 className="w-full accent-cyan-400 h-1 bg-white/10 rounded-lg cursor-pointer"
               />
@@ -170,7 +170,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </div>
               <input
                 type="checkbox"
-                checked={settings.enable3D}
+                checked={settings.enable3D ?? true}
                 onChange={() => toggleOption('enable3D')}
                 className="accent-cyan-400 h-4 w-4 rounded cursor-pointer"
               />
@@ -184,7 +184,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </div>
               <input
                 type="checkbox"
-                checked={settings.reduceMotion}
+                checked={settings.reduceMotion ?? false}
                 onChange={() => toggleOption('reduceMotion')}
                 className="accent-cyan-400 h-4 w-4 rounded cursor-pointer"
               />
@@ -200,7 +200,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </div>
               <input
                 type="checkbox"
-                checked={settings.darkMode}
+                checked={settings.darkMode ?? false}
                 onChange={() => toggleOption('darkMode')}
                 className="accent-cyan-400 h-4 w-4 rounded cursor-pointer"
               />

@@ -36,7 +36,7 @@ export const AchievementsList: React.FC<AchievementsListProps> = ({ achievements
   };
 
   return (
-    <div id="achievements-root" className="glass-panel text-slate-100 p-6 rounded-2xl max-w-4xl mx-auto shadow-2xl z-10 relative">
+    <div id="achievements-root" className="glass-panel text-slate-100 p-4 sm:p-6 rounded-2xl max-w-4xl mx-auto shadow-2xl z-10 relative">
       {/* Header Panel */}
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
         <div className="flex items-center gap-3">

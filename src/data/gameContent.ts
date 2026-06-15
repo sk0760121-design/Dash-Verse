@@ -1,4 +1,4 @@
-import { Character, Trail, GameTheme, Mission } from '../types';
+import { Character, Trail, GameTheme, Mission, Accessory } from '../types';
 
 function toRoman(num: number): string {
   let result = '';
@@ -15,7 +15,10 @@ function toRoman(num: number): string {
 
 // 12 Runners / Characters (10+ required)
 export const INITIAL_CHARACTERS: Character[] = [
-  { id: 'classic_dino', name: '🦖 Classic 3D Rex', cost: 0, unlocked: true, description: 'Isometric 3D green voxel dinosaur. Grounded running (No Double Jumps Allowed!)', color: '#10b981', accentColor: '#34d399', runnerType: 'dino' },
+  { id: 'classic_dino', name: 'Rex (Default)', cost: 0, unlocked: true, description: 'Isometric 3D green voxel dinosaur. Grounded running (No Double Jumps Allowed!)', color: '#10b981', accentColor: '#34d399', runnerType: 'dino' },
+  { id: 'robo_dino', name: '🤖 3D Robo-Rex', cost: 90, unlocked: false, description: 'Prehistoric cybernetic machine rex clad in titanium plating. Double Jump Enabled!', color: '#38bdf8', accentColor: '#0ea5e9', runnerType: 'dino' },
+  { id: 'ninja_dino', name: '🥷 3D Shinobi Rex', cost: 140, unlocked: false, description: 'Ancient shadow ninja raptor clad in sleek dark garments. Double Jump Enabled!', color: '#1e293b', accentColor: '#64748b', runnerType: 'dino' },
+  { id: 'cyber_dino', name: '⚡ 3D Cyberpunk Dino', cost: 220, unlocked: false, description: 'High-tech hacker dino emitting reactive neon impulses. Double Jump Enabled!', color: '#f43f5e', accentColor: '#ffe4e6', runnerType: 'dino' },
   { id: 'cyber_run', name: '🤖 3D Cyber Runner', cost: 50, unlocked: false, description: 'Volumetric 3D metal droid with jetpack boosters. Double Jump Enabled.', color: '#06b6d4', accentColor: '#22d3ee', runnerType: 'robot' },
   { id: 'pixie_fox', name: '🦊 3D Pixie Ninja', cost: 120, unlocked: false, description: 'Elegantly sculpted crimson 3D fox runner. Double Jump Enabled.', color: '#ef4444', accentColor: '#f97316', runnerType: 'fox' },
   { id: 'neon_sphere', name: '🔮 3D Neon Core', cost: 250, unlocked: false, description: 'Anti-gravity 3D energy orb with outer orbital tech rings. Double Jump Enabled.', color: '#a855f7', accentColor: '#f43f5e', runnerType: 'sphere' },
@@ -26,7 +29,8 @@ export const INITIAL_CHARACTERS: Character[] = [
   { id: 'magma_golem', name: '🌋 3D Obsidian Core', cost: 500, unlocked: false, description: '3D igneous core containing live-flowing molten magma. Double Jump Enabled.', color: '#7f1d1d', accentColor: '#f97316', runnerType: 'sphere' },
   { id: 'aero_glider', name: '🪁 3D Aero Strider', cost: 550, unlocked: false, description: 'Ultralight aerodynamic 3D glider sphere optimizing atmospheric wind. Double Jump.', color: '#10b981', accentColor: '#34d399', runnerType: 'sphere' },
   { id: 'plasma_rex', name: '⚡ 3D Plasma Raptor', cost: 600, unlocked: false, description: 'Fearsome prehistoric rex with 3D neon plasma sub-conductors. Double Jump.', color: '#d946ef', accentColor: '#a855f7', runnerType: 'dino' },
-  { id: 'prism_drifter', name: '🌈 3D Prism Spirit', cost: 750, unlocked: false, description: 'Prismatic 3D light-sculpted runner mapping vibrant spectrum trails. Double Jump.', color: '#ec4899', accentColor: '#f43f5e', runnerType: 'fox' }
+  { id: 'prism_drifter', name: '🌈 3D Prism Spirit', cost: 750, unlocked: false, description: 'Prismatic 3D light-sculpted runner mapping vibrant spectrum trails. Double Jump.', color: '#ec4899', accentColor: '#f43f5e', runnerType: 'fox' },
+  { id: 'cosmic_striker', name: '🌌 3D Cosmic Striker', cost: 850, unlocked: false, description: 'Eons of starlight crystalized. Premium cosmic runner. SPECIAL ABILITY: Triple Jump Enabled!', color: '#6366f1', accentColor: '#a855f7', runnerType: 'sphere', hasTripleJump: true }
 ];
 
 // 12 Trails (10+ required)
@@ -230,3 +234,19 @@ const generateMissions = (): Mission[] => {
 };
 
 export const INITIAL_MISSIONS: Mission[] = generateMissions();
+
+export const INITIAL_ACCESSORIES: Accessory[] = [
+  // Hats list
+  { id: 'acc_none_hat', name: 'No Hat', type: 'hat', cost: 0, unlocked: true, description: 'Let your head breathe free.', color: '#2563eb', emoji: '❌' },
+  { id: 'acc_cap', name: '🧢 Red Sports Cap', type: 'hat', cost: 30, unlocked: false, description: 'Bright casual cap that matches any dino stride.', color: '#ef4444', emoji: '🧢' },
+  { id: 'acc_crown', name: '👑 Royal Gold Crown', type: 'hat', cost: 200, unlocked: false, description: 'Glistening 3D majestic crown encrusted with small rubies.', color: '#fbbf24', emoji: '👑' },
+  { id: 'acc_cowboy', name: '🤠 Wild West Hat', type: 'hat', cost: 85, unlocked: false, description: 'Leather stetson with a rounded brim for maximum cowboy style.', color: '#78350f', emoji: '🤠' },
+  { id: 'acc_pirate', name: '🏴‍☠️ Pirate Captain Hat', type: 'hat', cost: 110, unlocked: false, description: 'Double folded dread pirate hat featuring an anchor emblem.', color: '#1e293b', emoji: '🏴‍☠️' },
+  { id: 'acc_detective', name: '🕵️ detective Deerslayer', type: 'hat', cost: 60, unlocked: false, description: 'Classic houndstooth hat for sleuthing out coin trails.', color: '#475569', emoji: '🕵️' },
+  
+  // Glasses list
+  { id: 'acc_none_glasses', name: 'No Glasses', type: 'glasses', cost: 0, unlocked: true, description: 'Keep your eyes unobstructed.', color: '#312e81', emoji: '❌' },
+  { id: 'acc_glasses_cyber', name: '🕶️ Holographic Visor', type: 'glasses', cost: 50, unlocked: false, description: 'Futuristic visor projecting horizontal stream coordinate codes.', color: '#22d3ee', emoji: '🕶️' },
+  { id: 'acc_glasses_retro', name: '😎 Retro Shades', type: 'glasses', cost: 40, unlocked: false, description: 'Polarized dark cool glasses keeping the glare totally chill.', color: '#111827', emoji: '😎' },
+  { id: 'acc_glasses_deal', name: '👾 Pixel Deal-With-It', type: 'glasses', cost: 160, unlocked: false, description: 'Thug-life retro meme pixel glasses for ultimate gaming swag.', color: '#000000', emoji: '👾' }
+];

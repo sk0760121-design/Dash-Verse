@@ -17,6 +17,7 @@ export interface Character {
   color: string;
   accentColor: string;
   runnerType: 'dino' | 'robot' | 'fox' | 'sphere';
+  hasTripleJump?: boolean;
 }
 
 export interface Trail {
@@ -71,6 +72,17 @@ export interface GameStats {
   obstaclesAvoided: number;
 }
 
+export interface Accessory {
+  id: string;
+  name: string;
+  type: 'hat' | 'glasses';
+  cost: number;
+  unlocked: boolean;
+  description: string;
+  color: string;
+  emoji: string;
+}
+
 export interface GameState {
   score: number;
   coinsCollectedThisRun: number;
@@ -83,6 +95,11 @@ export interface GameState {
   activeCharacterId: string;
   activeTrailId: string;
   activeThemeId: string;
+  activeHatId?: string;
+  activeGlassesId?: string;
   multiplier?: number;
   consecutivePerfectJumps?: number;
+  shieldTimer?: number;
+  magnetTimer?: number;
+  powerMultiplierTimer?: number;
 }

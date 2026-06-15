@@ -24,7 +24,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   const activeMissionsCount = missions.filter(m => m.completed && !m.claimed).length;
 
   return (
-    <div id="main-menu-root" className="flex flex-col items-center justify-center p-4 md:p-8 text-slate-100 max-w-4xl mx-auto z-10 relative w-full">
+    <div id="main-menu-root" className="flex flex-col items-center justify-center p-2 sm:p-4 md:p-8 text-slate-100 max-w-4xl mx-auto z-10 relative w-full">
       {/* Fullscreen Button in main lobby */}
       {onToggleFullscreen && (
         <button
@@ -42,7 +42,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         </div>
         <h1 
           id="main-title" 
-          className="text-5xl md:text-8xl font-sans font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-500 to-amber-400 uppercase filter drop-shadow-[0_0_15px_rgba(0,242,255,0.3)]"
+          className="text-3xl sm:text-6xl md:text-8xl font-sans font-black tracking-wider sm:tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-500 to-amber-400 uppercase filter drop-shadow-[0_0_15px_rgba(0,242,255,0.3)]"
         >
           DASH VERSE
         </h1>

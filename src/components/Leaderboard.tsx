@@ -179,7 +179,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ userHighScore, onClose
     : Math.max(2, Math.min(99, Math.round(((userRank - 0.5) / totalCompetitors) * 100)));
 
   return (
-    <div id="leaderboard-panel-root" className="w-full max-w-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/35 rounded-3xl p-6 md:p-8 shadow-[0_0_60px_rgba(6,182,212,0.18)] relative overflow-hidden text-slate-100 mx-auto">
+    <div id="leaderboard-panel-root" className="w-full max-w-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/35 rounded-3xl p-4 sm:p-6 md:p-8 shadow-[0_0_60px_rgba(6,182,212,0.18)] relative overflow-hidden text-slate-100 mx-auto">
       {/* Decorative Cybernetic lights */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/5 rounded-full blur-3xl -z-10" />

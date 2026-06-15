@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { GameSettings, GameStats, GameState, Character, Trail, GameTheme, Mission, Achievement } from './types';
+import { GameSettings, GameStats, GameState, Character, Trail, GameTheme, Mission, Achievement, Accessory } from './types';
 import { GameCanvas } from './components/GameCanvas';
 import { HUD } from './components/HUD';
 import { MainMenu } from './components/MainMenu';
@@ -18,7 +18,7 @@ import { sound } from './utils/sound';
 import { Sparkles, X, Heart, Award } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
-import { INITIAL_CHARACTERS, INITIAL_TRAILS, INITIAL_THEMES, INITIAL_MISSIONS } from './data/gameContent';
+import { INITIAL_CHARACTERS, INITIAL_TRAILS, INITIAL_THEMES, INITIAL_MISSIONS, INITIAL_ACCESSORIES } from './data/gameContent';
 
 const INITIAL_ACHIEVEMENTS: Achievement[] = [
   { id: 'first-jump', title: 'Skyward Bound', description: 'Perform your first jump into the horizon.', icon: 'zap', unlocked: false },
@@ -81,7 +81,7 @@ export default function App() {
   const [settings, setSettings] = useState<GameSettings>(() => {
     try {
       const stored = localStorage.getItem('horizon_runner_settings');
-      return stored ? JSON.parse(stored) : DEFAULT_SETTINGS;
+      return stored ? { ...DEFAULT_SETTINGS, ...JSON.parse(stored) } : DEFAULT_SETTINGS;
     } catch {
       return DEFAULT_SETTINGS;
     }
@@ -90,7 +90,7 @@ export default function App() {
   const [stats, setStats] = useState<GameStats>(() => {
     try {
       const stored = localStorage.getItem('horizon_runner_stats');
-      return stored ? JSON.parse(stored) : DEFAULT_STATS;
+      return stored ? { ...DEFAULT_STATS, ...JSON.parse(stored) } : DEFAULT_STATS;
     } catch {
       return DEFAULT_STATS;
     }
@@ -150,6 +150,24 @@ export default function App() {
     }
   });
 
+  const [accessories, setAccessories] = useState<Accessory[]>(() => {
+    try {
+      const stored = localStorage.getItem('horizon_runner_accessories');
+      if (stored) {
+        const parsed = JSON.parse(stored) as Accessory[];
+        if (parsed.length < INITIAL_ACCESSORIES.length) {
+          const parsedIds = new Set(parsed.map(a => a.id));
+          const newItems = INITIAL_ACCESSORIES.filter(a => !parsedIds.has(a.id));
+          return [...parsed, ...newItems];
+        }
+        return parsed;
+      }
+      return INITIAL_ACCESSORIES;
+    } catch {
+      return INITIAL_ACCESSORIES;
+    }
+  });
+
   const [missions, setMissions] = useState<Mission[]>(() => {
     try {
       const stored = localStorage.getItem('horizon_runner_missions');
@@ -186,11 +204,15 @@ export default function App() {
       const activeChar = localStorage.getItem('horizon_runner_active_char') || 'classic_dino';
       const activeTrail = localStorage.getItem('horizon_runner_active_trail') || 'trail_none';
       const activeTheme = localStorage.getItem('horizon_runner_active_theme') || 'theme_classic';
+      const activeHat = localStorage.getItem('horizon_runner_active_hat') || 'acc_none_hat';
+      const activeGlasses = localStorage.getItem('horizon_runner_active_glasses') || 'acc_none_glasses';
       return {
         ...DEFAULT_GAME_STATE,
         activeCharacterId: activeChar,
         activeTrailId: activeTrail,
         activeThemeId: activeTheme,
+        activeHatId: activeHat,
+        activeGlassesId: activeGlasses,
       };
     } catch {
       return DEFAULT_GAME_STATE;
@@ -434,6 +456,10 @@ export default function App() {
   }, [characters]);
 
   useEffect(() => {
+    localStorage.setItem('horizon_runner_accessories', JSON.stringify(accessories));
+  }, [accessories]);
+
+  useEffect(() => {
     localStorage.setItem('horizon_runner_trails', JSON.stringify(trails));
   }, [trails]);
 
@@ -455,6 +481,12 @@ export default function App() {
       localStorage.setItem('horizon_runner_active_char', gameState.activeCharacterId);
       localStorage.setItem('horizon_runner_active_trail', gameState.activeTrailId);
       localStorage.setItem('horizon_runner_active_theme', gameState.activeThemeId);
+      if (gameState.activeHatId) {
+        localStorage.setItem('horizon_runner_active_hat', gameState.activeHatId);
+      }
+      if (gameState.activeGlassesId) {
+        localStorage.setItem('horizon_runner_active_glasses', gameState.activeGlassesId);
+      }
       
       const charNameObj = characters.find(c => c.id === gameState.activeCharacterId);
       if (charNameObj) {
@@ -463,7 +495,7 @@ export default function App() {
     } catch (e) {
       console.error('Failed to save active equipment state:', e);
     }
-  }, [gameState.activeCharacterId, gameState.activeTrailId, gameState.activeThemeId, characters]);
+  }, [gameState.activeCharacterId, gameState.activeTrailId, gameState.activeThemeId, gameState.activeHatId, gameState.activeGlassesId, characters]);
 
   // Synchronize dynamic Quest/Mission updates in reaction to Stats progress changes!
   useEffect(() => {
@@ -547,16 +579,27 @@ export default function App() {
   };
 
   // Shop equip commands
-  const handleSelectItem = (type: 'character' | 'trail' | 'theme', id: string) => {
+  const handleSelectItem = (type: 'character' | 'trail' | 'theme' | 'accessory', id: string) => {
     setGameState(prev => {
       if (type === 'character') return { ...prev, activeCharacterId: id };
       if (type === 'trail') return { ...prev, activeTrailId: id };
-      return { ...prev, activeThemeId: id };
+      if (type === 'theme') return { ...prev, activeThemeId: id };
+      if (type === 'accessory') {
+        const item = accessories.find(a => a.id === id);
+        if (item) {
+          if (item.type === 'hat') {
+            return { ...prev, activeHatId: id };
+          } else {
+            return { ...prev, activeGlassesId: id };
+          }
+        }
+      }
+      return prev;
     });
   };
 
   // Shop purchase payouts
-  const handlePurchaseItem = (type: 'character' | 'trail' | 'theme', id: string, cost: number) => {
+  const handlePurchaseItem = (type: 'character' | 'trail' | 'theme' | 'accessory', id: string, cost: number) => {
     setStats(prev => ({ ...prev, coins: prev.coins - cost }));
     if (type === 'character') {
       setCharacters(prev => prev.map(c => c.id === id ? { ...c, unlocked: true } : c));
@@ -564,6 +607,8 @@ export default function App() {
       setTrails(prev => prev.map(t => t.id === id ? { ...t, unlocked: true } : t));
     } else if (type === 'theme') {
       setThemes(prev => prev.map(th => th.id === id ? { ...th, unlocked: true } : th));
+    } else if (type === 'accessory') {
+      setAccessories(prev => prev.map(a => a.id === id ? { ...a, unlocked: true } : a));
     }
   };
 
@@ -576,6 +621,8 @@ export default function App() {
       activeCharacterId: prev.activeCharacterId,
       activeTrailId: prev.activeTrailId,
       activeThemeId: prev.activeThemeId,
+      activeHatId: prev.activeHatId,
+      activeGlassesId: prev.activeGlassesId,
       isCountingDown: true,
       countdown: 3,
     }));
@@ -598,7 +645,14 @@ export default function App() {
   const handleMainMenu = () => {
     sound.playJump();
     setScreen('menu');
-    setGameState(DEFAULT_GAME_STATE);
+    setGameState(prev => ({
+      ...DEFAULT_GAME_STATE,
+      activeCharacterId: prev.activeCharacterId,
+      activeTrailId: prev.activeTrailId,
+      activeThemeId: prev.activeThemeId,
+      activeHatId: prev.activeHatId,
+      activeGlassesId: prev.activeGlassesId,
+    }));
   };
 
   // Play Pause Toggle
@@ -684,7 +738,7 @@ export default function App() {
       )}
 
       {/* Main Container viewport */}
-      <main className={`flex-1 flex flex-col items-center justify-center ${isFullscreen ? 'p-0 w-full h-full' : 'p-4'}`}>
+      <main className={`flex-1 flex flex-col items-center justify-start md:justify-center overflow-y-auto ${isFullscreen ? 'p-0 w-full h-full' : 'p-3 sm:p-4 md:p-6'} w-full`}>
         {screen === 'menu' && (
           <MainMenu
             stats={stats}
@@ -742,16 +796,24 @@ export default function App() {
                   setScreen('settings');
                 }}
                 onJumpStart={() => {
-                  // Direct bypass hook simulation to canvas
-                  const btn = document.getElementById('runner-game-canvas');
-                  if (btn) {
-                    const ke = new KeyboardEvent('keydown', { key: 'ArrowUp' });
-                    window.dispatchEvent(ke);
+                  if (typeof (window as any).triggerGameJump === 'function') {
+                    (window as any).triggerGameJump();
+                  } else {
+                    // Direct bypass hook simulation to canvas fallback
+                    const btn = document.getElementById('runner-game-canvas');
+                    if (btn) {
+                      const ke = new KeyboardEvent('keydown', { key: 'ArrowUp' });
+                      window.dispatchEvent(ke);
+                    }
                   }
                 }}
                 onDuckStart={(active) => {
-                  const ke = new KeyboardEvent(active ? 'keydown' : 'keyup', { key: 'ArrowDown' });
-                  window.dispatchEvent(ke);
+                  if (typeof (window as any).triggerGameDuck === 'function') {
+                    (window as any).triggerGameDuck(active);
+                  } else {
+                    const ke = new KeyboardEvent(active ? 'keydown' : 'keyup', { key: 'ArrowDown' });
+                    window.dispatchEvent(ke);
+                  }
                 }}
                 isFullscreen={isFullscreen}
                 onToggleFullscreen={toggleFullscreen}
@@ -774,9 +836,12 @@ export default function App() {
             characters={characters}
             trails={trails}
             themes={themes}
+            accessories={accessories}
             activeCharacterId={gameState.activeCharacterId}
             activeTrailId={gameState.activeTrailId}
             activeThemeId={gameState.activeThemeId}
+            activeHatId={gameState.activeHatId || 'acc_none_hat'}
+            activeGlassesId={gameState.activeGlassesId || 'acc_none_glasses'}
             onSelectItem={handleSelectItem}
             onPurchaseItem={handlePurchaseItem}
             onClose={() => {

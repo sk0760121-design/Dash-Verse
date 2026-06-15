@@ -65,12 +65,12 @@ export const DailyLoginBonus: React.FC<DailyLoginBonusProps> = ({
   };
 
   return (
-    <div id="daily-bonus-root" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+    <div id="daily-bonus-root" className="fixed inset-0 z-50 flex justify-center items-start sm:items-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="w-full max-w-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/30 rounded-3xl p-6 md:p-8 shadow-[0_0_50px_rgba(6,182,212,0.15)] relative overflow-hidden text-slate-100"
+        className="w-full max-w-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/30 rounded-3xl p-4 sm:p-6 md:p-8 shadow-[0_0_50px_rgba(6,182,212,0.15)] relative overflow-hidden text-slate-100 my-auto"
       >
         {/* Glow backdrop effects */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/10 rounded-full blur-3xl -z-10" />

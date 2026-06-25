@@ -30,7 +30,18 @@ export const INITIAL_CHARACTERS: Character[] = [
   { id: 'aero_glider', name: '🪁 3D Aero Strider', cost: 550, unlocked: false, description: 'Ultralight aerodynamic 3D glider sphere optimizing atmospheric wind. Double Jump.', color: '#10b981', accentColor: '#34d399', runnerType: 'sphere' },
   { id: 'plasma_rex', name: '⚡ 3D Plasma Raptor', cost: 600, unlocked: false, description: 'Fearsome prehistoric rex with 3D neon plasma sub-conductors. Double Jump.', color: '#d946ef', accentColor: '#a855f7', runnerType: 'dino' },
   { id: 'prism_drifter', name: '🌈 3D Prism Spirit', cost: 750, unlocked: false, description: 'Prismatic 3D light-sculpted runner mapping vibrant spectrum trails. Double Jump.', color: '#ec4899', accentColor: '#f43f5e', runnerType: 'fox' },
-  { id: 'cosmic_striker', name: '🌌 3D Cosmic Striker', cost: 850, unlocked: false, description: 'Eons of starlight crystalized. Premium cosmic runner. SPECIAL ABILITY: Triple Jump Enabled!', color: '#6366f1', accentColor: '#a855f7', runnerType: 'sphere', hasTripleJump: true }
+  { id: 'cosmic_striker', name: '🌌 3D Cosmic Striker', cost: 850, unlocked: false, description: 'Eons of starlight crystalized. Premium cosmic runner. SPECIAL ABILITY: Triple Jump Enabled!', color: '#6366f1', accentColor: '#a855f7', runnerType: 'sphere', hasTripleJump: true },
+  { id: 'nebula_walker', name: '🌌 3D Nebula Walker', cost: 900, unlocked: false, description: 'Interstellar guardian shifting through deep cosmic nebulas. Double Jump.', color: '#8b5cf6', accentColor: '#06b6d4', runnerType: 'fox' },
+  { id: 'cyber_samurai', name: '⚔️ 3D Cyber Samurai', cost: 950, unlocked: false, description: 'Legendary digital ronin clad in reactive holographic armor. Double Jump.', color: '#f43f5e', accentColor: '#22d3ee', runnerType: 'robot' },
+  { id: 'solar_flare_rex', name: '☀️ 3D Solar Flare Rex', cost: 1000, unlocked: false, description: 'Thermonuclear dinosaur radiating high-energy stellar waves. Double Jump.', color: '#eab308', accentColor: '#ea580c', runnerType: 'dino' },
+  { id: 'frost_bite_wolf', name: '❄️ 3D Frostbite Wolf', cost: 1050, unlocked: false, description: 'Glacial canine forged from absolute zero sub-zero tundra. Double Jump.', color: '#bae6fd', accentColor: '#38bdf8', runnerType: 'fox' },
+  { id: 'void_phantom', name: '👁️ 3D Void Phantom', cost: 1100, unlocked: false, description: 'Inscrutable void entity mapping invisible dark-matter tracks. Double Jump.', color: '#111827', accentColor: '#a855f7', runnerType: 'sphere' },
+  { id: 'giga_driller', name: '⚡ 3D Giga Mech Dino', cost: 1150, unlocked: false, description: 'Heavy mining mech optimized for precision diamond extraction. SPECIAL ABILITY: Triple Jump Enabled!', color: '#ca8a04', accentColor: '#facc15', runnerType: 'robot', hasTripleJump: true },
+  { id: 'aurora_kitsune', name: '🦊 3D Aurora Kitsune', cost: 1200, unlocked: false, description: 'Vibrant northern spirit mapping magnificent solar wind trails. SPECIAL ABILITY: Triple Jump Enabled!', color: '#10b981', accentColor: '#34d399', runnerType: 'fox', hasTripleJump: true },
+  { id: 'hyper_streak', name: '⚡ 3D Hyper Sphere', cost: 1250, unlocked: false, description: 'Hyper-velocity anti-gravity sub-atomic particle. SPECIAL ABILITY: Triple Jump Enabled!', color: '#ec4899', accentColor: '#f43f5e', runnerType: 'sphere', hasTripleJump: true },
+  { id: 'shadow_monarch', name: '👑 3D Shadow Monarch', cost: 1300, unlocked: false, description: 'Voxel dread-lord commanding dark shadow legions. SPECIAL ABILITY: Triple Jump Enabled!', color: '#1e1b4b', accentColor: '#818cf8', runnerType: 'dino', hasTripleJump: true },
+  { id: 'emerald_gargoyle', name: '🐉 3D Jade Dragon', cost: 1400, unlocked: false, description: 'Magnificent crystalline jade dragon with gold accents. SPECIAL ABILITY: Triple Jump Enabled!', color: '#047857', accentColor: '#fbbf24', runnerType: 'fox', hasTripleJump: true },
+  { id: 'quantum_overlord', name: '🌌 3D Quantum Sovereign', cost: 1500, unlocked: false, description: 'The ultimate space-time sovereign, utilizing full quantum mastery. SPECIAL ABILITY: Triple Jump Enabled!', color: '#6d28d9', accentColor: '#fbbf24', runnerType: 'sphere', hasTripleJump: true }
 ];
 
 // 12 Trails (10+ required)
@@ -46,7 +57,18 @@ export const INITIAL_TRAILS: Trail[] = [
   { id: 'trail_solar_flare', name: '☀️ Solar Flare', cost: 130, unlocked: false, type: 'fire', color: '#eab308' },
   { id: 'trail_cyber_grid', name: '🌐 Grid Matrix', cost: 175, unlocked: false, type: 'electric', color: '#10b981' },
   { id: 'trail_void_vapor', name: '🌫️ Void Mist', cost: 220, unlocked: false, type: 'shadow', color: 'rgba(99, 102, 241, 0.3)' },
-  { id: 'trail_ruby_spark', name: '💎 Ruby Shards', cost: 250, unlocked: false, type: 'rainbow', color: '#ec4899' }
+  { id: 'trail_ruby_spark', name: '💎 Ruby Shards', cost: 250, unlocked: false, type: 'rainbow', color: '#ec4899' },
+  { id: 'trail_ice_shards', name: '❄️ Glacial Icicles', cost: 80, unlocked: false, type: 'electric', color: '#7dd3fc' },
+  { id: 'trail_forest_leaves', name: '🍃 Emerald Leaves', cost: 95, unlocked: false, type: 'fire', color: '#16a34a' },
+  { id: 'trail_plasma_glow', name: '🧬 Neon Plasma', cost: 120, unlocked: false, type: 'electric', color: '#d946ef' },
+  { id: 'trail_black_hole', name: '🌌 Gravitational Void', cost: 135, unlocked: false, type: 'shadow', color: 'rgba(76, 29, 149, 0.4)' },
+  { id: 'trail_gold_shower', name: '🪙 Golden Glimmer', cost: 160, unlocked: false, type: 'rainbow', color: '#fbbf24' },
+  { id: 'trail_sunset_glow', name: '🌅 Sunset Radiance', cost: 190, unlocked: false, type: 'fire', color: '#f43f5e' },
+  { id: 'trail_mint_breeze', name: '🌿 Healing Herbs', cost: 210, unlocked: false, type: 'electric', color: '#34d399' },
+  { id: 'trail_cosmic_warp', name: '✨ Deep Space Warp', cost: 240, unlocked: false, type: 'rainbow', color: '#6366f1' },
+  { id: 'trail_cyber_laser', name: '🚨 Laser Red Strike', cost: 260, unlocked: false, type: 'electric', color: '#ef4444' },
+  { id: 'trail_sweet_candy', name: '🍬 Cotton Candy', cost: 280, unlocked: false, type: 'rainbow', color: '#f472b6' },
+  { id: 'trail_matrix_code', name: '📟 Matrix Digital Rain', cost: 300, unlocked: false, type: 'electric', color: '#22c55e' }
 ];
 
 // 11 Themes (10+ required)
@@ -61,7 +83,18 @@ export const INITIAL_THEMES: GameTheme[] = [
   { id: 'theme_synthwave', name: '🌅 Synth Shore', cost: 130, unlocked: false, skyColor: '#f43f5e', skyNightColor: '#1e1b4b', groundColor: '#311042', mountainColor: '#500747', treeColor: '#701a75' },
   { id: 'theme_deepsea', name: '🌊 Abyssal Trench', cost: 155, unlocked: false, skyColor: '#035a70', skyNightColor: '#02141a', groundColor: '#000a12', mountainColor: '#083344', treeColor: '#115e59' },
   { id: 'theme_golden', name: '👑 El Dorado', cost: 200, unlocked: false, skyColor: '#fde047', skyNightColor: '#451a03', groundColor: '#854d0e', mountainColor: '#a16207', treeColor: '#ca8a04' },
-  { id: 'theme_cherry_forest', name: '🌸 Sakura Gardens', cost: 220, unlocked: false, skyColor: '#ffe4e6', skyNightColor: '#4c0519', groundColor: '#881337', mountainColor: '#9f1239', treeColor: '#fda4af' }
+  { id: 'theme_cherry_forest', name: '🌸 Sakura Gardens', cost: 220, unlocked: false, skyColor: '#ffe4e6', skyNightColor: '#4c0519', groundColor: '#881337', mountainColor: '#9f1239', treeColor: '#fda4af' },
+  { id: 'theme_candy', name: '🍬 Sugar Dreamland', cost: 95, unlocked: false, skyColor: '#fbcfe8', skyNightColor: '#4d052c', groundColor: '#fda4af', mountainColor: '#f472b6', treeColor: '#ec4899' },
+  { id: 'theme_matrix', name: '📟 Mainframe Error', cost: 105, unlocked: false, skyColor: '#030712', skyNightColor: '#022c22', groundColor: '#052e16', mountainColor: '#14532d', treeColor: '#22c55e' },
+  { id: 'theme_sunset_beach', name: '🏖️ Sunset Coast', cost: 115, unlocked: false, skyColor: '#fdba74', skyNightColor: '#311042', groundColor: '#f59e0b', mountainColor: '#b45309', treeColor: '#fbbf24' },
+  { id: 'theme_aurora', name: '🌌 Aurora Borealis', cost: 125, unlocked: false, skyColor: '#0f172a', skyNightColor: '#022c22', groundColor: '#0f172a', mountainColor: '#0d9488', treeColor: '#2dd4bf' },
+  { id: 'theme_outpost', name: '🛸 Galactic Outpost', cost: 140, unlocked: false, skyColor: '#111827', skyNightColor: '#120526', groundColor: '#311042', mountainColor: '#4f46e5', treeColor: '#818cf8' },
+  { id: 'theme_steampunk', name: '⚙️ Brass Foundry', cost: 165, unlocked: false, skyColor: '#78350f', skyNightColor: '#1e1b4b', groundColor: '#451a03', mountainColor: '#78350f', treeColor: '#b45309' },
+  { id: 'theme_neon_cyber', name: '🛹 Tokyo Drift', cost: 195, unlocked: false, skyColor: '#1e1b4b', skyNightColor: '#000000', groundColor: '#3b0764', mountainColor: '#581c87', treeColor: '#f43f5e' },
+  { id: 'theme_underwater', name: '🐬 Neptune Kingdom', cost: 215, unlocked: false, skyColor: '#0284c7', skyNightColor: '#09333f', groundColor: '#075985', mountainColor: '#0c4a6e', treeColor: '#06b6d4' },
+  { id: 'theme_nebula', name: '🪐 Orion Nebula', cost: 235, unlocked: false, skyColor: '#2d0644', skyNightColor: '#0b0114', groundColor: '#4c1d95', mountainColor: '#6d28d9', treeColor: '#a855f7' },
+  { id: 'theme_supernova', name: '💥 Supernova Blast', cost: 255, unlocked: false, skyColor: '#7f1d1d', skyNightColor: '#450a0a', groundColor: '#991b1b', mountainColor: '#f43f5e', treeColor: '#fb7185' },
+  { id: 'theme_zen', name: '⛩️ Autumn Pagoda', cost: 285, unlocked: false, skyColor: '#fdf4ff', skyNightColor: '#2d0130', groundColor: '#701a75', mountainColor: '#e879f9', treeColor: '#f472b6' }
 ];
 
 // Helper program to output 216 distinct curated missions (8 categories x 27 tiers)
@@ -243,10 +276,32 @@ export const INITIAL_ACCESSORIES: Accessory[] = [
   { id: 'acc_cowboy', name: '🤠 Wild West Hat', type: 'hat', cost: 85, unlocked: false, description: 'Leather stetson with a rounded brim for maximum cowboy style.', color: '#78350f', emoji: '🤠' },
   { id: 'acc_pirate', name: '🏴‍☠️ Pirate Captain Hat', type: 'hat', cost: 110, unlocked: false, description: 'Double folded dread pirate hat featuring an anchor emblem.', color: '#1e293b', emoji: '🏴‍☠️' },
   { id: 'acc_detective', name: '🕵️ detective Deerslayer', type: 'hat', cost: 60, unlocked: false, description: 'Classic houndstooth hat for sleuthing out coin trails.', color: '#475569', emoji: '🕵️' },
+  { id: 'acc_wizard', name: '🧙 Wizard Pointy Hat', type: 'hat', cost: 130, unlocked: false, description: 'Star-patterned mage hat that radiates runic wizard powers.', color: '#4c1d95', emoji: '🧙' },
+  { id: 'acc_chef', name: '👨‍🍳 Master Chef Hat', type: 'hat', cost: 45, unlocked: false, description: 'Tall white kitchen hat for when you are cooking up new high scores.', color: '#ffffff', emoji: '👨‍🍳' },
+  { id: 'acc_party', name: '🎉 Neon Party Cone', type: 'hat', cost: 35, unlocked: false, description: 'Striped rainbow birthday cone cap perfect for massive high score celebrations!', color: '#fb7185', emoji: '🎉' },
+  { id: 'acc_santa', name: '🧑‍🎄 Festivity Peak', type: 'hat', cost: 55, unlocked: false, description: 'Fluffy white-furred crimson hat full of holiday joy.', color: '#dc2626', emoji: '🧑‍🎄' },
+  { id: 'acc_viking', name: '🪖 Viking Horn Helmet', type: 'hat', cost: 95, unlocked: false, description: 'Double horned brass iron warden helm giving battle boost style.', color: '#78716c', emoji: '🪖' },
+  { id: 'acc_halo', name: '😇 Heavenly Gold Halo', type: 'hat', cost: 250, unlocked: false, description: 'Ethereal floating halo emanating brilliant gold starlight energy.', color: '#f59e0b', emoji: '😇' },
+  { id: 'acc_astro', name: '🧑‍🚀 Cosmic Astro Helm', type: 'hat', cost: 180, unlocked: false, description: 'Vacuum-sealed space exploration dome helmet. 100% oxygen-filled.', color: '#e2e8f0', emoji: '🧑‍🚀' },
+  { id: 'acc_tophat', name: '🎩 Victorian Top Hat', type: 'hat', cost: 100, unlocked: false, description: 'Monochrome silk gentleman hat projecting pure timeless elegance.', color: '#0f172a', emoji: '🎩' },
+  { id: 'acc_ninja_band', name: '🩸 Crimson Shinobi Wrap', type: 'hat', cost: 75, unlocked: false, description: 'Swift red tactical headband waving gracefully in aerodynamic wind.', color: '#ef4444', emoji: '🩸' },
+  { id: 'acc_propeller', name: '🚁 Retro Propeller Cap', type: 'hat', cost: 65, unlocked: false, description: 'Propeller cap spinning rapidly when jumping at high speeds.', color: '#eab308', emoji: '🚁' },
+  { id: 'acc_cat_ears', name: '🐱 Cyber Cat Ears', type: 'hat', cost: 120, unlocked: false, description: 'Adorable digital audio receptor bands for aesthetic audio cues.', color: '#ec4899', emoji: '🐱' },
   
   // Glasses list
   { id: 'acc_none_glasses', name: 'No Glasses', type: 'glasses', cost: 0, unlocked: true, description: 'Keep your eyes unobstructed.', color: '#312e81', emoji: '❌' },
   { id: 'acc_glasses_cyber', name: '🕶️ Holographic Visor', type: 'glasses', cost: 50, unlocked: false, description: 'Futuristic visor projecting horizontal stream coordinate codes.', color: '#22d3ee', emoji: '🕶️' },
   { id: 'acc_glasses_retro', name: '😎 Retro Shades', type: 'glasses', cost: 40, unlocked: false, description: 'Polarized dark cool glasses keeping the glare totally chill.', color: '#111827', emoji: '😎' },
-  { id: 'acc_glasses_deal', name: '👾 Pixel Deal-With-It', type: 'glasses', cost: 160, unlocked: false, description: 'Thug-life retro meme pixel glasses for ultimate gaming swag.', color: '#000000', emoji: '👾' }
+  { id: 'acc_glasses_deal', name: '👾 Pixel Deal-With-It', type: 'glasses', cost: 160, unlocked: false, description: 'Thug-life retro meme pixel glasses for ultimate gaming swag.', color: '#000000', emoji: '👾' },
+  { id: 'acc_glasses_steampunk', name: '🥽 Brass Steam Goggles', type: 'glasses', cost: 90, unlocked: false, description: 'Double-lensed analog gear glasses with pressure-sealed rims.', color: '#d97706', emoji: '🥽' },
+  { id: 'acc_glasses_monocle', name: '🧐 Noble Golden Monocle', type: 'glasses', cost: 150, unlocked: false, description: 'High-class single eye magnifier with a thin gold chain trail.', color: '#fbbf24', emoji: '🧐' },
+  { id: 'acc_glasses_heart', name: '💖 Pink Heart Shades', type: 'glasses', cost: 45, unlocked: false, description: 'Cute heart-shaped tinted glasses filtering only affectionate waves.', color: '#f472b6', emoji: '💖' },
+  { id: 'acc_glasses_laser', name: '👁️ Crimson Laser Visor', type: 'glasses', cost: 220, unlocked: false, description: 'Pure energy lens projecting bright continuous targeting lasers.', color: '#ef4444', emoji: '👁️' },
+  { id: 'acc_glasses_stars', name: '⭐ Stellar Starlight Glasses', type: 'glasses', cost: 75, unlocked: false, description: 'Star-shaped retro frames sparkling when doing trick triple jumps.', color: '#fbbf24', emoji: '⭐' },
+  { id: 'acc_glasses_butterfly', name: '🦋 Fantasy Wings Spec', type: 'glasses', cost: 80, unlocked: false, description: 'Ornate turquoise wing specs that increase aerodynamic feelings.', color: '#0d9488', emoji: '🦋' },
+  { id: 'acc_glasses_detective', name: '🕵️ Black Sleuth Specs', type: 'glasses', cost: 55, unlocked: false, description: 'Classic heavy horn-rimmed detective spectacles for keen coin spotters.', color: '#1e293b', emoji: '🕵️' },
+  { id: 'acc_glasses_neon_green', name: '🟢 Toxic Tech Specs', type: 'glasses', cost: 60, unlocked: false, description: 'Cybernetic high-contrast green visor detecting fast hazard collisions.', color: '#22c55e', emoji: '🟢' },
+  { id: 'acc_glasses_gold', name: '✈️ Golden Runway Aviators', type: 'glasses', cost: 110, unlocked: false, description: 'Aviation gold frames for professional supersonic high-altitude flyers.', color: '#fbbf24', emoji: '✈️' },
+  { id: 'acc_glasses_spy', name: '🕵️ Night-Vision Goggles', type: 'glasses', cost: 130, unlocked: false, description: 'Triple focal green infrared sensor lenses for dark night caverns.', color: '#15803d', emoji: '🕵️' },
+  { id: 'acc_glasses_vr', name: '🥽 Ultra Quest VR Goggles', type: 'glasses', cost: 175, unlocked: false, description: 'High-fidelity immersive headset mapping pixel grids directly onto your retina.', color: '#3b82f6', emoji: '🥽' }
 ];

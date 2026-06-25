@@ -558,7 +558,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         vx: -3 - Math.random() * 2,
         vy: -0.5 - Math.random() * 1.5,
         size: 4 + Math.random() * 5,
-        color: Math.random() > 0.4 ? '#ef4444' : '#f97316',
+        color: Math.random() > 0.4 ? trailColor : '#f97316',
         alpha: 0.9,
         life: 0,
         maxLife: 20 + Math.random() * 10,
@@ -566,7 +566,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       });
     } else if (trailType === 'rainbow') {
       const colors = ['#f43f5e', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7'];
-      const pickColor = colors[engine.time % colors.length];
+      const pickColor = trailColor === '#f43f5e' ? colors[engine.time % colors.length] : trailColor;
       engine.particles.push({
         x: px,
         y: py + (Math.random() - 0.5) * 15,
@@ -587,7 +587,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
           vx: -1,
           vy: (Math.random() - 0.5) * 3,
           size: 2,
-          color: '#22d3ee',
+          color: trailColor,
           alpha: 1,
           life: 0,
           maxLife: 10,
@@ -601,7 +601,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         vx: -1.5,
         vy: 0,
         size: engine.playerHeight, // triggers silhouette drawing size
-        color: 'rgba(0, 0, 0, 0.15)',
+        color: trailColor,
         alpha: 0.4,
         life: 0,
         maxLife: 15,
